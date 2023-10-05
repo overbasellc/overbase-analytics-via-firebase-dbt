@@ -3,10 +3,11 @@
     {{
         return(
             {
-                "project": var("overbase_project", "placeholder_project"),
+                "project": var("overbase_project", target.project),  
                 "dataset": var("overbase_dataset", "placeholder_dataset"),
+                
             }
         )
-    }}
+    }}      ## todo: replace bigquery specific target.project with adapter function
 
 {% endmacro %}

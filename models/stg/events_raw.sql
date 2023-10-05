@@ -3,3 +3,5 @@
 
 select 1 as test
 from `{{ config["project"] }}.{{ config["dataset"] }}.events_intraday_*`
+
+
