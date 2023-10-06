@@ -36,9 +36,3 @@ models:
     # Applies to all files under models/example/
     example:
       materialized: view
-
-
-vars:
-  "OVERBASE:FIREBASE_PROJECT_ID": "project1"
-  "OVERBASE:FIREBASE_DATASET_ID": "overbase"
-  "OVERBASE:FIREBASE_EVENTS_TABLE_NAME": "events_intraday_*"
