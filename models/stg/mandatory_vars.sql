@@ -6,4 +6,4 @@
 {{ compile_mandatory_var("OVERBASE:FIREBASE_ANALYTICS_DATASET_ID", "firebase_analytics_raw_test") }}
  
 
- SELECT 1
+ SELECT True
