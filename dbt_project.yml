@@ -35,11 +35,12 @@ models:
       schema: fb_testing
 
 vars: 
-  # mandatory variables. The same value needs to be put in mandatory_vars.sql
+  # mandatory variables. The same value needs to be put in overbase_mandatory_vars.sql
   # whatever we use in sources.yml, we can't define in this package's dbt_project.yml, or else they won't be able to be overwritten by the client
   overbase_firebase:
     # "OVERBASE:FIREBASE_PROJECT_ID": "overbase" # mandatory, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_DATASET_ID": "firebase_analytics_raw_test" # mandatory, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
+    "OVERBASE:DONT_CARE": "NEED TO DEFINE AT LEAST ONE ITEM IN THIS YAML ARRAY SO THAT THE YAML LORDS DON'T COMPLAIN"
   

@@ -1,3 +1,5 @@
+{{ verify_all_overbase_mandatory_variables() }}
+
 SELECT
     -- *
       DATE(timestamp_micros(event_timestamp)) as event_date
@@ -29,6 +31,4 @@ SELECT
     , STRUCT<operating_system STRING, operating_system_version STRING>(
         device.operating_system, device.operating_system_version
     ) as device_os
-from {{ source("firebase_analytics", "events") }}
-WHERE True 
-AND (SELECT FROM {{ ref("mandatory_vars") }})
+from {{ source("firebase_analytics", "events") }}  
