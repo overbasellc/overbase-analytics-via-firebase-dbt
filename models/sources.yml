@@ -2,11 +2,11 @@ version: 2
 
 sources:
   - name: firebase_analytics
-    database: "{{ var( 'OVERBASE:FIREBASE_PROJECT_ID', 'overbase') }}"
-    schema: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_DATASET_ID', 'firebase_analytics_raw_test')}}"
+    database: "{{ var( 'OVERBASE:FIREBASE_PROJECT_ID') }}"
+    schema: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_DATASET_ID')}}"
     tables:
       - name: events
-        identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME', 'events_*')}}"
+        identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME')}}"
       - name: events_intraday
-        identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME', 'events_intraday_*')}}"
+        identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME')}}"
 
