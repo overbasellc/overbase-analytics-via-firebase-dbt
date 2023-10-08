@@ -1,9 +1,5 @@
-
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
 name: 'overbase_firebase'
-version: '1.0.0'
+version: '0.1.0'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
@@ -36,3 +32,11 @@ models:
     # Applies to all files under models/example/
     example:
       materialized: view
+
+vars: 
+# mandatory variables. The same value needs to be put in mandatory_vars.sql
+  "OVERBASE:FIREBASE_PROJECT_ID": "overbase"
+  "OVERBASE:FIREBASE_ANALYTICS_DATASET_ID": "firebase_analytics_raw_test"
+  "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*"
+  "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*"
+  
