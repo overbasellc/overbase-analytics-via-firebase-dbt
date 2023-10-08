@@ -28,17 +28,18 @@ clean-targets:         # directories to be removed by `dbt clean`
 # as tables. These settings can be overridden in the individual model files
 # using the `{{ config(...) }}` macro.
 models:
-  my_new_project:
+  overbase_firebase:
     # Applies to all files under models/example/
-    example:
-      materialized: view
+    stg:
+      materialized: table
+      schema: fb_testing
 
 vars: 
-# mandatory variables. The same value needs to be put in mandatory_vars.sql
-# whatever we use in sources.yml, we can't define in this package's dbt_project.yml, or else they won't be able to be overwritten by the client
+  # mandatory variables. The same value needs to be put in mandatory_vars.sql
+  # whatever we use in sources.yml, we can't define in this package's dbt_project.yml, or else they won't be able to be overwritten by the client
   overbase_firebase:
-    "OVERBASE:FIREBASE_PROJECT_ID": "overbase" # mandatory, but used in sources.yml
-    "OVERBASE:FIREBASE_ANALYTICS_DATASET_ID": "firebase_analytics_raw_test" # mandatory, but used in sources.yml
-    "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional
-    "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional
+    # "OVERBASE:FIREBASE_PROJECT_ID": "overbase" # mandatory, but used in sources.yml
+    # "OVERBASE:FIREBASE_ANALYTICS_DATASET_ID": "firebase_analytics_raw_test" # mandatory, but used in sources.yml
+    # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional, but used in sources.yml
+    # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
   
