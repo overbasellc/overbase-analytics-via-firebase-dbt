@@ -30,3 +30,4 @@ SELECT
         device.operating_system, device.operating_system_version
     ) as device_os
 from {{ source("firebase_analytics", "events") }}
+{{ wrapper_var('OVERBASE:FIREBASE_ANALYTICS_DATASET_ID') }}

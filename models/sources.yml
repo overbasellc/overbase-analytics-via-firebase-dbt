@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: firebase_analytics
     database: "{{ var( 'OVERBASE:FIREBASE_PROJECT_ID') }}"
-    schema: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_DATASET_ID')}}"
+    schema: "{{ wrapper_var( 'OVERBASE:FIREBASE_ANALYTICS_DATASET_ID')}}"
     tables:
       - name: events
         identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME')}}"
