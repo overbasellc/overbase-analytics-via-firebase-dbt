@@ -1,9 +1,8 @@
+{{ overbase_firebase.verify_all_overbase_mandatory_variables() }}
 {{ config(materialized='table',
-          schema="schema_in_model"
+          schema= var('OVERBASE:SCHEMA')
 ) }}
 
-
-{{ overbase_firebase.verify_all_overbase_mandatory_variables() }}
 
 SELECT
     -- *
@@ -20,4 +19,6 @@ SELECT
     , STRUCT<operating_system STRING, operating_system_version STRING>(
         device.operating_system, device.operating_system_version) as device_os
 FROM {{ source("firebase_analytics", "events") }}  
+WHERE True 
+-- AND _TABLE_SUFFIX LIKE 'intraday%'
 

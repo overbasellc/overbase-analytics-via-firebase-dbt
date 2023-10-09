@@ -10,8 +10,4 @@
 {% macro verify_all_overbase_mandatory_variables() -%}
 {{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_PROJECT_ID", "overbase") -}}
 {{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_ANALYTICS_DATASET_ID", "firebase_analytics_raw_test") -}}
-{{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_PROJECT_ID", "overbase") -}}
-{{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_PROJECT_ID", "overbase") -}}
-{{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_PROJECT_ID", "overbase") -}}
-{{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_PROJECT_ID", "overbase") -}}
 {%- endmacro %}

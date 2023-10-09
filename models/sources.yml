@@ -7,6 +7,9 @@ sources:
     tables:
       - name: events
         identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME', 'events_*')}}"
-      - name: events_intraday
-        identifier: "{{ var( 'OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME', 'events_intraday_%')}}"
-
+  - name: firebase_crashlytics
+    database: "{{ var( 'OVERBASE:FIREBASE_PROJECT_ID', 'overbase') }}"
+    schema: "{{ var( 'OVERBASE:FIREBASE_CRASHLYTICS_DATASET_ID', 'firebase_crashlytics_raw_test')}}"
+    tables:
+      - name: events
+        identifier: "{{ var( 'OVERBASE:FIREBASE_CRASHLYTICS_EVENTS_TABLE_NAME', 'com_labpixies_flood_floodit_*')}}"
