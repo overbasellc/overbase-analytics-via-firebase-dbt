@@ -30,9 +30,8 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   overbase_firebase:
     # Applies to all files under models/example/
-    stg:
-      materialized: table
-      schema: fb_testing
+    materialized: table
+    schema: fb_testing
 
 vars: 
   # mandatory variables. The same value needs to be put in overbase_mandatory_vars.sql
