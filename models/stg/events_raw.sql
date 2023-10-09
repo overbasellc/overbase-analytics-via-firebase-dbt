@@ -1,4 +1,4 @@
-{{ verify_all_overbase_mandatory_variables() }}
+{{ overbase_firebase.verify_all_overbase_mandatory_variables() }}
 
 SELECT
     -- *
