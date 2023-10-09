@@ -1,6 +1,5 @@
 {{ overbase_firebase.verify_all_overbase_mandatory_variables() }}
-{{ config(materialized='table',
-          schema= var('OVERBASE:SCHEMA')
+{{ config(materialized='table'
 ) }}
 
 

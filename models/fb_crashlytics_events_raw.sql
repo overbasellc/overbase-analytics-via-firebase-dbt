@@ -1,5 +1,4 @@
-{{ config(materialized='table',
-          schema= var('OVERBASE:SCHEMA')
+{{ config(materialized='table'
 ) }}
 
 

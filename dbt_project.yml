@@ -21,7 +21,7 @@ models:
   overbase_firebase:
     # Applies to all files under models/example/
     materialized: table
-    # schema: fb_testing # override the schema on a per model basis, so that it can be overidden by clients
+    schema: overbase
 
 vars: 
   # mandatory variables. The same value needs to be put in overbase_mandatory_vars.sql
@@ -31,5 +31,5 @@ vars:
     # "OVERBASE:FIREBASE_ANALYTICS_DATASET_ID": "firebase_analytics_raw_test" # mandatory, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
-    "OVERBASE:SCHEMA": "overbase" # optional
+    "OVERBASE:DONT_CARE": "MAKE_YAML_WORK" # optional
   
