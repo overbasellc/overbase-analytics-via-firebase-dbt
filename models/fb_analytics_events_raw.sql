@@ -38,8 +38,8 @@ SELECT
     , STRUCT< name STRING, medium STRING, source STRING>(
         traffic_source.name, traffic_source.medium, traffic_source.source
     ) as traffic_source
-    ,{{ generate_struct(var('OVERBASE:CUSTOM_USER_PROPERTIES',[]),'user_properties') }} as user_properties
-    ,{{ generate_struct(var('OVERBASE:CUSTOM_EVENT_PARAMETERS',[]),'event_parameters') }} as event_parameters
+    , {{ overbase_firebase.get_user_properties() }} as user_properties
+    , {{ overbase_firebase.get_event_parameters() }} as event_parameters
 
 FROM {{ source("firebase_analytics", "events") }}  
 WHERE True 
