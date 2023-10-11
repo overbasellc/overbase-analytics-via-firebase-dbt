@@ -1,0 +1,36 @@
+{% macro generate_struct_for_user_properties() -%}
+    {{ generate_struct(get_user_property_tuples(), 'user_properties') }}
+{%- endmacro%}
+
+{% macro generate_struct_for_event_parameters() -%}
+    {{ generate_struct(get_event_parameter_tuples(), 'event_params') }}
+{%- endmacro%}
+
+
+{% macro generate_struct(all_parameters, firebase_record_name) -%}
+    {{ return(adapter.dispatch('generate_struct', 'overbase_firebase')(all_parameters, firebase_record_name) ) }}
+{%- endmacro %}
+
+
+{# STRUCT<ob_ui_dark_mode_string STRING, plays_progressive_string STRING, first_open_time_int INT64, poorly_set_variable_double DOUBLE>(
+     (SELECT LOWER(value.string_value) from UNNEST(user_properties) WHERE key = 'ob_ui_dark_mode') , (SELECT LOWER(value.string_value) from UNNEST(user_properties) WHERE key = 'plays_progressive') , (SELECT value.int_value from UNNEST(user_properties) WHERE key = 'first_open_time') , (SELECT value.double_value from UNNEST(user_properties) WHERE key = 'poorly_set_variable') 
+ )  #}
+{% macro bigquery__generate_struct(all_parameters, firebase_record_name) -%}
+  STRUCT< 
+{%- for parameter in all_parameters -%}
+    {%- set property_name = parameter[0] -%}
+    {%- set data_type = parameter[1] -%}
+    {%- set bq_type = parameter[2] -%}
+    {%- set how_to_extract_value = parameter[3] -%}
+    {{ property_name }}_{{ data_type.lower() }} {{ bq_type }}{{ ", " if not loop.last else "" }}
+{%- endfor -%}>(
+      {% for parameter in all_parameters -%}
+        {%- set property_name = parameter[0] -%}
+        {%- set data_type = parameter[1] -%}
+        {%- set bq_type = parameter[2] -%}
+        {%- set how_to_extract_value = parameter[3] -%}
+      (SELECT {{ how_to_extract_value }} FROM UNNEST({{ firebase_record_name }}) WHERE key = '{{ property_name }}') {{ ", " if not loop.last else "" }}
+    {%- endfor %}
+    )
+{%- endmacro %}
+

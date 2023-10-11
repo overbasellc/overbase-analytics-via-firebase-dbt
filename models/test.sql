@@ -1,3 +1,6 @@
 SELECT
-     , {{ get_user_properties() }} as cucu
-     , {{ get_event_parameters() }} as cucu
+
+{{ generate_struct_for_user_properties() }}
+
+
+{{ get_user_property_tuples() }}
