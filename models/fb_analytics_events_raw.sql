@@ -10,7 +10,7 @@
 
 WITH data as (
     SELECT
-        TIMESTAMP_MICROS(event_timestamp) as created_at
+          TIMESTAMP_MICROS(event_timestamp) as created_at
         , TIMESTAMP_MICROS(user_first_touch_timestamp) as installed_at
         , user_pseudo_id
         , user_id
@@ -47,6 +47,6 @@ WITH data as (
     WHERE True 
     AND _TABLE_SUFFIX LIKE 'intraday%'
 )
-SELECT *
+SELECT data.*
 FROM data
 WHERE row_no = 1
