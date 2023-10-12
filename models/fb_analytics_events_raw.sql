@@ -24,8 +24,8 @@ SELECT
         device.language, coalesce(language_codes.iso_two,'unknown'), if(device.time_zone_offset_seconds >0,'+' || left(cast(time(timestamp_seconds(device.time_zone_offset_seconds)) as string),5),
     "-" || left( cast(time(timestamp_seconds(abs(device.time_zone_offset_seconds))) as string),5))
     ) AS device
-    , STRUCT<city STRING , country STRING, country_iso_2 STRING, continent STRING, region STRING, sub_continent STRING, metro STRING>(
-        geo.city, geo.country ,coalesce(country_codes.country_iso_code_two,'unknown'), geo.continent, geo.region , geo.sub_continent, geo.metro
+    , STRUCT<city STRING , original_country_value STRING,country STRING , country_iso_2 STRING, continent STRING, region STRING, sub_continent STRING, metro STRING>(
+        geo.city, geo.country,coalesce(country_codes.country_name,'unknown') ,coalesce(country_codes.country_iso_code_two,'unknown'), geo.continent, geo.region , geo.sub_continent, geo.metro
     ) as geo
     , STRUCT<type STRING,brand_name STRING,model_name STRING,marketing_name STRING,os_hardware_model STRING>(
         device.category,device.mobile_brand_name,device.mobile_model_name,device.mobile_marketing_name,device.mobile_os_hardware_model 
@@ -49,7 +49,7 @@ FROM {{ source("firebase_analytics", "events") }}  as events
 LEFT JOIN {{ref("iso_language")}} as language_codes
     ON split(events.device.language,'-')[SAFE_OFFSET(0)] = language_codes.iso_two
 LEFT JOIN {{ref('iso_country')}} as country_codes
-    ON lower(events.geo.country) = lower(country_codes.country_name)
+    ON lower(events.geo.country) = lower(coalesce(country_codes.firebase_country_name,country_codes.country_name))
 WHERE True 
 AND _TABLE_SUFFIX LIKE 'intraday%'
 QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) = 1
