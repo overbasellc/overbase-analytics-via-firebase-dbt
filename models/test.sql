@@ -1,6 +1,2 @@
-SELECT
-
-{{ generate_struct_for_user_properties() }}
-
-
-{{ get_user_property_tuples() }}
+select * from {{ ref('iso_language') }}
+where iso_two ='cu'

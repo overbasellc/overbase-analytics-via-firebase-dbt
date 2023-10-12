@@ -20,11 +20,13 @@ SELECT
     , STRUCT<revenue FLOAT64, currency STRING>(
         user_ltv.revenue, user_ltv.currency
     ) AS users_ltv
-    -- TODO timezone offset seconds into string (e.g. -08:00)
-    -- SELECT UNIX_MILLIS(TIMESTAMP '2008-12-25 15:30:00-08:00') AS millis;
     , STRUCT<language STRING, language_iso_2 STRING, time_zone_offset STRING>(
-        device.language, 'TODO', 'TODO device.time_zone_offset_seconds'
+        device.language, coalesce(language_codes.iso_two,'unknown'), if(device.time_zone_offset_seconds >0,'+' || left(cast(time(timestamp_seconds(device.time_zone_offset_seconds)) as string),5),
+    "-" || left( cast(time(timestamp_seconds(abs(device.time_zone_offset_seconds))) as string),5))
     ) AS device
+    , STRUCT<city STRING , country STRING, country_iso_2 STRING, continent STRING, region STRING, sub_continent STRING, metro STRING>(
+        geo.city, geo.country ,coalesce(country_codes.country_iso_code_two,'unknown'), geo.continent, geo.region , geo.sub_continent, geo.metro
+    ) as geo
     , STRUCT<type STRING,brand_name STRING,model_name STRING,marketing_name STRING,os_hardware_model STRING>(
         device.category,device.mobile_brand_name,device.mobile_model_name,device.mobile_marketing_name,device.mobile_os_hardware_model 
     ) AS device_hardware
@@ -43,7 +45,11 @@ SELECT
         app_info.firebase_app_id, stream_id, device.advertising_id
     ) as other_ids
     , COUNT(1) OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) as duplicates_cnt
-FROM {{ source("firebase_analytics", "events") }}  
+FROM {{ source("firebase_analytics", "events") }}  as events
+LEFT JOIN {{ref("iso_language")}} as language_codes
+    ON split(events.device.language,'-')[SAFE_OFFSET(0)] = language_codes.iso_two
+LEFT JOIN {{ref('iso_country')}} as country_codes
+    ON lower(events.geo.country) = lower(country_codes.country_name)
 WHERE True 
 AND _TABLE_SUFFIX LIKE 'intraday%'
 QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) = 1
