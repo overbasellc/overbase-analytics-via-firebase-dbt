@@ -23,6 +23,10 @@ models:
     materialized: table
     schema: overbase
 
+seeds:
+  overbase_firebase:
+    schema: overbase
+
 vars: 
   # mandatory variables. The same value needs to be put in overbase_mandatory_vars.sql
   # whatever we use in sources.yml, we can't define in this package's dbt_project.yml, or else they won't be able to be overwritten by the client
