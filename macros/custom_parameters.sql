@@ -4,8 +4,8 @@
             ("ob_ui_dark_mode", "STRING", False)
            ,("ob_ui_font_size", "STRING", False)
     ]%}
-    {% set all_parameters = builtin_parameters +  flatten_yaml_parameters(var('OVERBASE:CUSTOM_USER_PROPERTIES', [])) %}
-    {% set all_complete_parameters = add_extra_types(all_parameters) %}
+    {% set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_USER_PROPERTIES', [])) %}
+    {% set all_complete_parameters = overbase_firebase.add_extra_types(all_parameters) %}
     {{ return(all_complete_parameters) }}
 {%- endmacro %}
 
@@ -18,8 +18,8 @@
            ,("ob_parent_view_type", "STRING", False)
            ,("ob_name", "STRING", False)
     ]%}
-    {% set all_parameters = builtin_parameters +  flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) %}
-    {% set all_complete_parameters = add_extra_types(all_parameters) %}
+    {% set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) %}
+    {% set all_complete_parameters = overbase_firebase.add_extra_types(all_parameters) %}
     {{ return(all_complete_parameters) }}
 {%- endmacro %}
 
@@ -36,7 +36,7 @@
 {% macro add_extra_types(parameter_tuples) -%}
     {% set result = [] %}
     {% for tuple in parameter_tuples %}
-        {{ result.append((tuple + get_extra_parameter_types(tuple[0], tuple[1].lower()))) }}
+        {{ result.append((tuple + overbase_firebase.get_extra_parameter_types(tuple[0], tuple[1].lower()))) }}
     {% endfor %}
     {{ return(result) }}
 {% endmacro %}
