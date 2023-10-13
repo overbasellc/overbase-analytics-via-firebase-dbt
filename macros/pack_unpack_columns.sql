@@ -8,19 +8,19 @@
     , app_version.major_minor as app_version_major_minor
     , app_version.normalized as app_version_normalized
 #}
-{%- macro unpack_columns_into_minicolumns_for_select(columns, miniColumnsToIgnore) -%}
+{%- macro unpack_columns_into_minicolumns_for_select(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
     {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
 
     {%- for column in columns -%}
         {% set outer_loop = loop %}
 
         {%- if not column.data_type.startswith('STRUCT') -%}
-            {{ ", " if not outer_loop.first else "" }}{{ column.name }}
+            {{ ", " if not outer_loop.first else "" }}{{ tablePrefix ~ column.name }} AS {{ aliasPrefix ~ column.name }}
         {%- else -%}
             {# remove the 'STRUCT<' prefix, then split by ' ' and get every other item, ie the mini column name  #}
             {%- for structMiniColumn in column.data_type[7:-1].split(' ')[::2] -%}
                 {%- if column.name ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
-                {{ "" if outer_loop.first and loop.first else ", " }} {{ column.name }}.{{ structMiniColumn }} as {{ column.name }}_{{ structMiniColumn }}
+                {{ "" if outer_loop.first and loop.first else ", " }} {{ tablePrefix ~ column.name }}.{{ structMiniColumn }} AS {{ aliasPrefix ~ column.name }}_{{ structMiniColumn }}
                 {%- endif -%}
             {%- endfor -%}
         {%- endif -%}
@@ -37,11 +37,11 @@ app_id
             app_version_firebase_value , app_version_major , app_version_minor , app_version_bugfix , app_version_major_minor , app_version_normalized 
         ) as app_version
         #}
-{%- macro pack_minicolumns_into_structs_for_select(columns, miniColumnsToIgnore) -%}
+{%- macro pack_minicolumns_into_structs_for_select(columns, miniColumnsToIgnore, unpackedAliasPrefix, packedAliasPrefix) -%}
     {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
     {%- for column in columns -%}
         {%- if not column.data_type.startswith('STRUCT') %}
-            {{ ", " if not loop.first else "" }}{{ column.name }} 
+            {{ ", " if not loop.first else "" }}{{ unpackedAliasPrefix ~ column.name }} AS {{ packedAliasPrefix ~ column.name }}
         {%- else -%}
             {#- ['ob_view_name STRING',] -#}
             {%- set structDefinitionDDLs = [] %}
@@ -53,12 +53,12 @@ app_id
             {%- set structValues = [] %}
             {% for structMiniColumn in column.data_type[7:-1].split(' ')[::2] -%}
                 {% if column.name ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet -%}
-                     {%- set _ = structValues.append(column.name ~ "_" ~ structMiniColumn) -%}
+                     {%- set _ = structValues.append(unpackedAliasPrefix ~ column.name ~ "_" ~ structMiniColumn) -%}
                 {%- endif -%}
             {%- endfor -%}
             {{ ", " if not loop.first else "" }} STRUCT<{{ structDefinitionDDLs | join(", ") }}>(
                 {{ structValues | join(", ") }} 
-            ) as {{ column.name }}
+            ) as {{ packedAliasPrefix ~ column.name }}
         {%- endif -%}
     {%- endfor -%}
 {%- endmacro -%}
