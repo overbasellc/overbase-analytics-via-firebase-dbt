@@ -9,24 +9,33 @@
 #}
 {% macro get_filtered_columns_for_table(table_name, columnsToFind, miniColumnsToIgnore) -%}
 
-    {%- set columnNamesToGroupBy = set(columnsToFind) -%}
+    {%- set columnsToFindSet = set(columnsToFind) -%}
+    {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
     {%- set columnsUnnestedCount = [] -%}
 
     {%- set columns = adapter.get_columns_in_relation(ref(table_name)) -%}
     {%- set columnsToGroupBy = [] -%}
 
     {%- for column in columns -%}
-        {%- if column.name in columnNamesToGroupBy -%}
+        {%- if columnsToFind == "*" or column.name in columnsToFindSet -%}
             {%- if not column.data_type.startswith('STRUCT') -%}
-                {% set _ = columnsUnnestedCount.append(1) %}
+                {%- if column.name not in miniColumnsToIgnoreSet -%}
+                    {{ columnsToGroupBy.append(column) or "" }}
+                    {% set _ = columnsUnnestedCount.append(1) %}
+                {%- endif -%}
             {%- else %}
-                {% set _ = columnsUnnestedCount.append(column.data_type.split(',')|length) %}
-            {%- endif -%}
+                {# remove the 'STRUCT<' prefix, then split by ' ' and get every other item, ie the mini column name  #}
+                {%- for structMiniColumn in column.data_type[7:-1].split(' ')[::2] -%}
+                    {%- if column.name ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
+                        {% set _ = columnsUnnestedCount.append(1) %}
+                    {%- endif -%}
+                {%- endfor -%}
                 {{ columnsToGroupBy.append(column) or "" }}
+            {%- endif -%}
         {%- endif -%}
     {%- endfor %} 
 
-    {{ return([columnsToGroupBy, columnsUnnestedCount | sum() - miniColumnsToIgnore|length ]) }}
+    {{ return([columnsToGroupBy, columnsUnnestedCount | sum() ]) }}
 
 {%- endmacro -%}
 
