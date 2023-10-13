@@ -1,9 +1,9 @@
 {% macro generate_struct_for_user_properties() -%}
-    {{ generate_struct(get_user_property_tuples(), 'user_properties') }}
+    {{ overbase_firebase.generate_struct(overbase_firebase.get_user_property_tuples(), 'user_properties') }}
 {%- endmacro%}
 
 {% macro generate_struct_for_event_parameters() -%}
-    {{ generate_struct(get_event_parameter_tuples(), 'event_params') }}
+    {{ overbase_firebase.generate_struct(overbase_firebase.get_event_parameter_tuples(), 'event_params') }}
 {%- endmacro%}
 
 
