@@ -8,7 +8,7 @@
 ) }}
 
 
-{%- set columnNamesToGroupBy = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
+{%- set columnNamesToGroupBy = ["created_dates", "app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
                                 "traffic_source"

@@ -28,6 +28,24 @@
 
 WITH data as (
     SELECT    DATE(created_at) as created_date
+            , STRUCT<
+            {%- for n in range(-12, 13) -%}
+                {%- if n < 0 -%}
+                 minus_{{ n|abs }} DATE {{ ", " if not loop.last else "" }}
+                 {%- elif n > 0 -%}
+                 plus_{{ n|abs }} DATE {{ ", " if not loop.last else "" }}
+                {%- endif -%}
+            {% endfor -%}>(
+            {% for n in range(-12, 13) -%}
+                {%- if n < 0 -%}
+                 DATE(DATETIME(created_at, '-{{ '%02d' % n|abs }}:00')) {{ ", " if not loop.last else "" }}
+                 {%- elif n > 0 -%}
+                 DATE(DATETIME(created_at, '+{{ '%02d' % n|abs }}:00')) {{ ", " if not loop.last else "" }}
+                {%- endif -%}
+            {% endfor -%}
+            ) as created_dates
+
+
             , DATE(installed_at) as installed_date
             , {{ overbase_firebase.unpack_columns_into_minicolumns_for_select(columnsToGroupBy, miniColumnsToIgnoreInGroupBy) }}
             , COUNT(1) as cnt
