@@ -20,8 +20,9 @@
 
 {%- set custom_summed_metrics = [] -%}
 {%- for tuple in get_event_parameter_tuples () -%}
-    {%- if tuple[2] == True %}
-        {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as sum_" ~ tuple[0], "alias": "sum_" ~ tuple[0]}) -%}
+    {%- if tuple[2] == True -%}
+        {# cm = custom metris #}
+        {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as sum_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
     {% endif -%}
 {%- endfor -%}
 
