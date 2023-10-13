@@ -22,7 +22,7 @@
 {%- for tuple in overbase_firebase.get_event_parameter_tuples () -%}
     {%- if tuple[2] == True -%}
         {# cm = custom metris #}
-        {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as sum_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
+        {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as cm_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
     {% endif -%}
 {%- endfor -%}
 
