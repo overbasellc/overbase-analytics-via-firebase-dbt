@@ -37,10 +37,11 @@ vars:
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
     #"OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
-    #       - { property_name: plays_progressive, data_type: 'string' } 
-    #       - { property_name: first_open_time, data_type: 'int' } 
-    #       - { property_name: poorly_set_variable, data_type: 'double' }
-    #"OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
-    #       - { property_name: plays_progressive, data_type: 'string' } 
-    #       - { property_name: first_open_time, data_type: 'int' } 
-    #       - { property_name: poorly_set_variable, data_type: 'double' }
+    #       - { property_name: plays_progressive, data_type: 'string'} 
+    #       - { property_name: first_open_time, data_type: 'int'} 
+    #       - { property_name: poorly_set_variable, data_type: 'double'}
+    # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
+          # - { property_name: quantity, data_type: 'int',  is_metric: True' }
+    #       - { property_name: plays_progressive, data_type: 'string' ,  is_metric: False} 
+    #       - { property_name: first_open_time, data_type: 'int',  is_metric: False } 
+    #       - { property_name: poorly_set_variable, data_type: 'double',  is_metric: False }

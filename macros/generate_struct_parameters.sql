@@ -20,16 +20,19 @@
 {%- for parameter in all_parameters -%}
     {%- set property_name = parameter[0] -%}
     {%- set data_type = parameter[1] -%}
-    {%- set bq_type = parameter[2] -%}
-    {%- set how_to_extract_value = parameter[3] -%}
-    {{ property_name }}_{{ data_type.lower() }} {{ bq_type }}{{ ", " if not loop.last else "" }}
+    {%- set is_metric = parameter[2] -%}
+    {%- set bq_type = parameter[3] -%}
+    {%- set how_to_extract_value = parameter[4] -%}
+    {%- set struct_field_name = parameter[5] -%}
+    {{ struct_field_name }} {{ bq_type }}{{ ", " if not loop.last else "" }}
 {%- endfor -%}>(
       {% for parameter in all_parameters -%}
         {%- set property_name = parameter[0] -%}
         {%- set data_type = parameter[1] -%}
-        {%- set bq_type = parameter[2] -%}
-        {%- set how_to_extract_value = parameter[3] -%}
-      (SELECT {{ how_to_extract_value }} FROM UNNEST({{ firebase_record_name }}) WHERE key = '{{ property_name }}') {{ ", " if not loop.last else "" }}
+        {%- set is_metric = parameter[2] -%}
+        {%- set bq_type = parameter[3] -%}
+        {%- set how_to_extract_value = parameter[4] -%}
+           (SELECT {{ how_to_extract_value }} FROM UNNEST({{ firebase_record_name }}) WHERE key = '{{ property_name }}') {{ ", " if not loop.last else "" }}
     {%- endfor %}
     )
 {%- endmacro %}

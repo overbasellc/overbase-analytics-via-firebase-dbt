@@ -1,86 +1,44 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "created_at",
-      "data_type": "timestamp",
+      "field": "created_date",
+      "data_type": "date",
       "granularity": "day"
      }
 ) }}
 
-{%- set columnNamesToGroupBy = set(["app_id", "event_name", "platform", "appstore", "app_version"]) -%}
-{%- set columnsUnnestedCount = 11 -%}
 
-{%- set columns = adapter.get_columns_in_relation(ref("fb_analytics_events_raw")) -%}
-{%- set columnsToGroupBy = [] -%}
+{%- set columnNamesToGroupBy = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
+                                "user_properties", "event_parameters",
+                                "geo", "device_hardware", "device_language", "device_time_zone_offset",
+                                "traffic_source"
+] -%}
+{%- set miniColumnsToIgnoreInGroupBy = ["event_parameters.quantity_int"] -%}
+{%- set tmp_res = get_filtered_columns_for_table("fb_analytics_events_raw", columnNamesToGroupBy, miniColumnsToIgnoreInGroupBy) -%}
+{%- set columnsToGroupBy = tmp_res[0] -%}
+{%- set columnsUnnestedCount = tmp_res[1]  -%}
 
-{%- for column in columns -%}
-  {%- if column.name in columnNamesToGroupBy -%}
-    {%- set columnsUnnestedCount = columnsUnnestedCount + 1 -%}
-    {%- if column.data_type.startswith('STRUCT') -%}
-        {% set columnsUnnestedCount = columnsUnnestedCount + 1 + column.data_type.split(',')|length %}
-    {%- else %}
-        {% set columnsUnnestedCount = columnsUnnestedCount + 1 %}
-    {%- endif -%}
-        {{ columnsToGroupBy.append(column) or "" }}
-  {%- endif -%}
-{%- endfor %}
-
--- {% for column in columnsToGroupBy %}
---   Column: {{ column.name }} {{ column.data_type }}
--- {% endfor %}
--- columnsUnnestedCount {{ columnsUnnestedCount }}
--- get all columns
--- filter the ones we want for auto group by 
--- list the names of the ones we want in the CTE
--- add the group by count
--- select 
+{%- set custom_summed_metrics = [] -%}
+{%- for tuple in get_event_parameter_tuples () -%}
+    {%- if tuple[2] == True %}
+        {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as sum_" ~ tuple[0], "alias": "sum_" ~ tuple[0]}) -%}
+    {% endif -%}
+{%- endfor -%}
 
 WITH data as (
     SELECT    DATE(created_at) as created_date
             , DATE(installed_at) as installed_date
-    {%- for column in columnsToGroupBy -%}
-        {%- if column.data_type.startswith('STRUCT') -%}
-            {%- for structMiniColumn in column.data_type[7:-1].split(' ')[::2] %}
-            , {{ column.name }}.{{ structMiniColumn }} as {{ column.name }}_{{ structMiniColumn }}
-            {%- endfor -%}
-        {%- else -%}
-            , {{ column.name }} 
-        {%- endif -%}
-    {%- endfor -%}
-            -- , platform_version.*
-            -- , geo.*
-            -- , device_hardware.*
-            -- , device.*
-            -- , traffic_source.*
-            -- , user_properties
-            -- , event_parameters
+            , {{ unpack_columns_into_minicolumns_for_select(columnsToGroupBy, miniColumnsToIgnoreInGroupBy) }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
+            , {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
+
     FROM {{ ref("fb_analytics_events_raw") }}
-    GROUP BY 1,2 {% for n in range(3, 2 + columnsUnnestedCount) -%} ,{{ n }} {%- endfor %}
+    GROUP BY 1,2 {% for n in range(3, 3 + columnsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT created_date, installed_date
-        {%- for column in columnsToGroupBy -%}
-        {%- if column.data_type.startswith('STRUCT') -%}
-        , {{ column.data_type }} (
-            {% for structMiniColumn in column.data_type[7:-1].split(' ')[::2] -%}
-              {{ column.name }}_{{ structMiniColumn }} {{ ", " if not loop.last else "" }}
-            {%- endfor %}
-        ) as {{ column.name }}
-        {%- else -%}
-        , {{ column.name }} 
-        {% endif -%}
-        {%- endfor -%}
---     , STRUCT<original_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, normalized INT64>
---     (original_value, major, minor, bugfix, major_minor, normalized)
+        , {{ pack_minicolumns_into_structs_for_select(columnsToGroupBy, miniColumnsToIgnoreInGroupBy) }}
+        , cnt
+        , users
+        , {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
 FROM data
-
-
--- GROUP BY DATE(created_at), DATE(installed_at), app_id, event_name, platform, appstore
---         , original_value, major, minor, bugfix, major_minor, normalized
---         , platform_version.original_value, platform_version.major, platform_version.minor, platform_version.bugfix, platform_version.major_minor, platform_version.normalized
---         , geo.city , geo.original_country_value, geo.country , geo.country_iso_alpha_2, geo.continent, geo.region, geo.sub_continent, geo.metro
---         , device_hardware.type,device_hardware.brand_name,device_hardware.model_name,device_hardware.marketing_name,device_hardware.os_hardware_model
---         , device.original_language_value, device.language_iso_alpha_2, device.language_region_iso_alpha_2, device.time_zone_offset
---         , traffic_source.name, traffic_source.medium, traffic_source.source
-
