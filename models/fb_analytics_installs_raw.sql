@@ -16,11 +16,10 @@
 {%- endif %}
 
  
-WITH 
-custom_install_event AS (
+WITH  custom_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }}
         AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT")|length > 0 -%}
-                , '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT") }}'
+                event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT") }}'
             {%- else -%}
                 False
             {%- endif %}
@@ -51,4 +50,5 @@ custom_install_event AS (
 -- SELECT  COUNT(1) , COUNT(DISTINCT(user_pseudo_id))
 SELECT *
 FROM data 
+
 
