@@ -1,3 +1,28 @@
+{# Returns an array of tuples of (column, alias). If it's a struct, it extracts the value from within it. Example: 
+     [  ("$tablePrefix.app_id", "$aliasPrefix.app_id"),
+        ("$tablePrefix.event_name", "$aliasPrefix.event_name"),
+        ("$tablePrefix.app_version.firebase_value", "$aliasPrefix.app_version_firebase_value"),
+        ("$tablePrefix.app_version.major", "$aliasPrefix.app_version_major")
+        ("$tablePrefix.app_version.minor", "$aliasPrefix.app_version_minor")]
+#}
+{%- macro unpack_columns_into_minicolumns_array(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
+    {%- set result = [] -%}
+    {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
+    {%- for column in columns -%}
+        {%- if not column.data_type.startswith('STRUCT') -%}
+            {%- set _ = result.append( (tablePrefix ~ column.name, aliasPrefix ~ column.name) ) -%}
+        {%- else -%}
+            {# remove the 'STRUCT<' prefix, then split by ' ' and get every other item, ie the mini column name  #}
+            {%- for structMiniColumn in column.data_type[7:-1].split(' ')[::2] -%}
+                {%- if column.name ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
+                    {%- set _ = result.append( (tablePrefix ~ column.name ~ "." ~ structMiniColumn, aliasPrefix ~ column.name ~ "_" ~ structMiniColumn) ) -%}
+                {%- endif -%}
+            {%- endfor -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ return(result) }}
+{%- endmacro -%}
+
 
 {# Returns just the column name if it's not a struct, otherwise it unnests it. Example: 
      app_id, event_name, platform, appstore
@@ -8,23 +33,11 @@
     , app_version.major_minor as app_version_major_minor
     , app_version.normalized as app_version_normalized
 #}
-{%- macro unpack_columns_into_minicolumns_for_select(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
-    {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
-
-    {%- for column in columns -%}
-        {% set outer_loop = loop %}
-
-        {%- if not column.data_type.startswith('STRUCT') -%}
-            {{ ", " if not outer_loop.first else "" }}{{ tablePrefix ~ column.name }} AS {{ aliasPrefix ~ column.name }}
-        {%- else -%}
-            {# remove the 'STRUCT<' prefix, then split by ' ' and get every other item, ie the mini column name  #}
-            {%- for structMiniColumn in column.data_type[7:-1].split(' ')[::2] -%}
-                {%- if column.name ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
-                {{ "" if outer_loop.first and loop.first else ", " }} {{ tablePrefix ~ column.name }}.{{ structMiniColumn }} AS {{ aliasPrefix ~ column.name }}_{{ structMiniColumn }}
-                {%- endif -%}
-            {%- endfor -%}
-        {%- endif -%}
-    {%- endfor -%}
+{%- macro unpack_columns_into_minicolumns(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
+    {%- set minicolumns = overbase_firebase.unpack_columns_into_minicolumns_array(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
+    {%- for minicolumn in minicolumns -%}
+                   {{ ", " if not loop.first else "" }} {{ minicolumn[0] ~ " AS " ~ minicolumn[1] }}
+    {% endfor -%}
 {%- endmacro -%}
 
 

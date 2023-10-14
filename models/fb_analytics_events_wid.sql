@@ -42,11 +42,11 @@
 
 WITH data as (
     SELECT    DATE(events.created_at) as created_date
-            , {{ overbase_firebase.unpack_columns_into_minicolumns_for_select(columnsForEventDimensions, miniColumnsToIgnore, "events.", "event_") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnore, "events.", "event_") }}
 
             , DATE(installs.installed_at) as installed_date
-            , {{ overbase_firebase.unpack_columns_into_minicolumns_for_select(columnsForInstalledDatesDimension, miniColumnsToIgnore, "installs.", "") }}
-            , {{ overbase_firebase.unpack_columns_into_minicolumns_for_select(columnsForInstallDimensions, miniColumnsToIgnore, "installs.", "install_") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstalledDatesDimension, miniColumnsToIgnore, "installs.", "") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnore, "installs.", "install_") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(events.user_pseudo_id)) as users
             , {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}

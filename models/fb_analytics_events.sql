@@ -28,7 +28,7 @@
 
 WITH data as (
     SELECT    DATE(created_at) as created_date
-            , {{ overbase_firebase.unpack_columns_into_minicolumns_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
             , {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
@@ -37,7 +37,7 @@ WITH data as (
     GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT created_date
-        , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "") }}
+        , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
         , cnt
         , users
         , {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
