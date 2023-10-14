@@ -9,9 +9,9 @@
 ) }}
 
 SELECT    TIMESTAMP_MICROS(event_timestamp) as created_at
-         , {{ overbase_firebase.generate_date_timezone_tuple('TIMESTAMP_MICROS(event_timestamp)') }} as created_dates
+         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(event_timestamp)') }} as created_dates
         , TIMESTAMP_MICROS(user_first_touch_timestamp) as installed_at
-         , {{ overbase_firebase.generate_date_timezone_tuple('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as installed_dates
+         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as installed_dates
         , user_pseudo_id
         , user_id
         , app_info.id as app_id

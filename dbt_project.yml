@@ -44,7 +44,7 @@ vars:
     #       - { property_name: first_open_time, data_type: 'int'} 
     #       - { property_name: poorly_set_variable, data_type: 'double'}
     # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
-          # - { property_name: quantity, data_type: 'int',  is_metric: True' }
-    #       - { property_name: plays_progressive, data_type: 'string' ,  is_metric: False} 
+          # - { property_name: quantity, data_type: 'int',  is_metric: True }
+          # - { property_name: plays_progressive, data_type: 'int' ,  is_metric: True} 
     #       - { property_name: first_open_time, data_type: 'int',  is_metric: False } 
     #       - { property_name: poorly_set_variable, data_type: 'double',  is_metric: False }

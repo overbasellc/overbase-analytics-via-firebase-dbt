@@ -9,8 +9,10 @@
     {{ return(all_complete_parameters) }}
 {%- endmacro %}
 
-{# Array of tuples [(property_name, overbase_type, bigquery_type, how_to_extract_from_unnest)] #}
-{% macro get_event_parameter_tuples() -%}
+{# Array of tuples [(property_name, overbase_type, is_metric (Bool), bigquery_type, how_to_extract_from_unnest, struct_field_name)] 
+    ('ob_view_name', 'STRING', False, 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
+#}
+{% macro get_event_parameter_tuples_all() -%}
     {% set builtin_parameters = [ 
             ("ob_view_name", "STRING", False)
            ,("ob_view_type", "STRING", False)
@@ -22,6 +24,28 @@
     {% set all_complete_parameters = overbase_firebase.add_extra_types(all_parameters) %}
     {{ return(all_complete_parameters) }}
 {%- endmacro %}
+
+
+{%- macro get_event_parameter_tuples_metrics_only() -%}
+{%- set result = [] -%}
+{%- for tuple in overbase_firebase.get_event_parameter_tuples_all() -%}
+    {%- if tuple[2] == True -%}
+        {%- set _ = result.append(tuple) -%}
+    {% endif -%}
+{%- endfor -%}
+{{ return(result) }}
+{%- endmacro %}
+
+{%- macro get_event_parameter_tuples_dimensions_only() -%}
+{%- set result = [] -%}
+{%- for tuple in overbase_firebase.get_event_parameter_tuples_all() -%}
+    {%- if tuple[2] == False -%}
+        {%- set _ = result.append(tuple) -%}
+    {% endif -%}
+{%- endfor -%}
+{{ return(result) }}
+{%- endmacro %}
+
 
 
 {# Flatten from YAML array dict [{'property_name': 'foo', 'data_type':'bar'}] to a simple array of tuples [('my_custom_user_prop', 'string')] #}
@@ -42,7 +66,9 @@
 {% endmacro %}
 
 
-{# returns an tuple of (TYPE of said value, how to extract value) #}
+{# returns an tuple of (TYPE of said value, how to extract value, struct field name) 
+    ('STRING', 'LOWER(value.string_value)', $parameter_name ~ '_' ~ $data_type)
+#}
 {% macro get_extra_parameter_types(parameter_name, data_type) %}
     {% set data_type_to_value = {'string' : ['STRING', 'LOWER(value.string_value)'], 'int':['INT64', 'value.int_value'], 'double':['DOUBLE', 'value.double_value']  }%}
     {%- if not data_type in  ['string','int','double']  -%}

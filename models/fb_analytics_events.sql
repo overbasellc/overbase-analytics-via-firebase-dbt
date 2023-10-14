@@ -13,17 +13,18 @@
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
                                 "traffic_source"
 ] -%}
-{%- set miniColumnsToIgnoreInGroupBy = ["event_parameters.quantity_int"] -%}
+
+{%- set metricsToIgnore = get_event_parameter_tuples_metrics_only() -%}
+{%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(metricsToIgnore|map(attribute=5)|list, 'event_parameters.' ) -%}
+
 {%- set tmp_res = overbase_firebase.get_filtered_columns_for_table("fb_analytics_events_raw", columnNamesEventDimensions, miniColumnsToIgnoreInGroupBy) -%}
 {%- set columnsForEventDimensions = tmp_res[0] -%}
 {%- set eventDimensionsUnnestedCount = tmp_res[1]  -%}
 
 {%- set custom_summed_metrics = [] -%}
-{%- for tuple in overbase_firebase.get_event_parameter_tuples () -%}
-    {%- if tuple[2] == True -%}
-        {# cm = custom metris #}
-        {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as cm_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
-    {% endif -%}
+{%- for tuple in overbase_firebase.get_event_parameter_tuples_metrics_only () -%}
+    {# cm = custom metris #}
+    {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as cm_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
 {%- endfor -%}
 
 WITH data as (
@@ -31,7 +32,7 @@ WITH data as (
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
-            , {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
+            {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
     GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}

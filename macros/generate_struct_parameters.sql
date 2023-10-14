@@ -3,7 +3,7 @@
 {%- endmacro%}
 
 {% macro generate_struct_for_event_parameters() -%}
-    {{ overbase_firebase.generate_struct(overbase_firebase.get_event_parameter_tuples(), 'event_params') }}
+    {{ overbase_firebase.generate_struct(overbase_firebase.get_event_parameter_tuples_all(), 'event_params') }}
 {%- endmacro%}
 
 
