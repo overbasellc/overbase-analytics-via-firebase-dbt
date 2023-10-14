@@ -19,10 +19,10 @@
                                 "traffic_source"
 ] -%}
 
-{%- set eventParamsToIgnoreInGroupBy = get_event_parameter_tuples_for_rollup_dimensions_to_ignore() -%}
+{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_rollup_dimensions_to_ignore() -%}
 {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
 
-{%- set userPropertiesToIgnoreInGroupBy = get_user_property_tuples_for_rollup_dimensions_to_ignore() -%}
+{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_rollup_dimensions_to_ignore() -%}
 {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
 
 {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
