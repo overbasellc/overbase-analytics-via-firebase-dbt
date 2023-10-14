@@ -1,15 +1,13 @@
-
-
 {%- set columnNamesEventDimensions = ["created_dates", "installed_dates", "app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
                                 "traffic_source"
 ] -%}
-{%- set metricsToIgnore = get_event_parameter_tuples_metrics_only() -%}
+{%- set metricsToIgnore = overbase_firebase.get_event_parameter_tuples_metrics_only() -%}
 {%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(metricsToIgnore|map(attribute=5)|list, 'event_parameters.' ) -%}
 
 {# Ignore all time zones except the first & last (they're all the same, just save the computational effort) #}
-{%- set timezones = generate_date_timezone_tuple('dont care') | map(attribute=0) | list -%}
+{%- set timezones = overbase_firebase.generate_date_timezone_tuple('dont care') | map(attribute=0) | list -%}
 {%- set timezones = timezones[1:-1] -%}
 {%- set miniColumnsToIgnoreInGroupBy = miniColumnsToIgnoreInGroupBy + overbase_firebase.list_map_and_add_prefix(timezones, 'created_dates.') + overbase_firebase.list_map_and_add_prefix(timezones, 'installed_dates.') -%}
 
