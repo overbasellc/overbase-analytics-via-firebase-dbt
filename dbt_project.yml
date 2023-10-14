@@ -39,12 +39,18 @@ vars:
     "OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT": "" # optional e.g. attributed_first_open
     "OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS": 5
     "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # optional e.g. attributed_first_open
-    #"OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
-    #       - { property_name: plays_progressive, data_type: 'string'} 
+    # "OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
+          # - { property_name: up_just_in_raw, data_type: 'string'} 
     #       - { property_name: first_open_time, data_type: 'int'} 
     #       - { property_name: poorly_set_variable, data_type: 'double'}
     # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
-          # - { property_name: quantity, data_type: 'int',  is_metric: True }
+          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric' }
+          # - { property_name: 'quantity2', data_type: 'int',  rollup_type: 'metric' }
+          # - { property_name: param_dimension, data_type: 'string',  rollup_type: 'dimension' }
+          # - { property_name: param_just_raw, data_type: 'int' }
+          # - { property_name: param_just_raw_explicit, data_type: 'int', rollup_type: 'raw' }
+          # - { property_name: quantity3, data_type: 'int',  rollup_type: 'metric' }
+
           # - { property_name: plays_progressive, data_type: 'int' ,  is_metric: True} 
     #       - { property_name: first_open_time, data_type: 'int',  is_metric: False } 
     #       - { property_name: poorly_set_variable, data_type: 'double',  is_metric: False }

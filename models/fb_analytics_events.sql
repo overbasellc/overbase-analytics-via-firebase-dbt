@@ -14,15 +14,20 @@
                                 "traffic_source"
 ] -%}
 
-{%- set metricsToIgnore = get_event_parameter_tuples_metrics_only() -%}
-{%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(metricsToIgnore|map(attribute=5)|list, 'event_parameters.' ) -%}
+{%- set eventParamsToIgnoreInGroupBy = get_event_parameter_tuples_for_rollup_dimensions_to_ignore() -%}
+{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
+
+{%- set userPropertiesToIgnoreInGroupBy = get_user_property_tuples_for_rollup_dimensions_to_ignore() -%}
+{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
+
+{%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
 
 {%- set tmp_res = overbase_firebase.get_filtered_columns_for_table("fb_analytics_events_raw", columnNamesEventDimensions, miniColumnsToIgnoreInGroupBy) -%}
 {%- set columnsForEventDimensions = tmp_res[0] -%}
 {%- set eventDimensionsUnnestedCount = tmp_res[1]  -%}
 
 {%- set custom_summed_metrics = [] -%}
-{%- for tuple in overbase_firebase.get_event_parameter_tuples_metrics_only () -%}
+{%- for tuple in overbase_firebase.get_event_parameter_tuples_for_rollup_metrics () -%}
     {# cm = custom metris #}
     {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as cm_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
 {%- endfor -%}

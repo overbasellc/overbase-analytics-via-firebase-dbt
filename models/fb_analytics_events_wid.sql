@@ -19,8 +19,13 @@
                                 "traffic_source"
 ] -%}
 
-{%- set metricsToIgnore = get_event_parameter_tuples_metrics_only() -%}
-{%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(metricsToIgnore|map(attribute=5)|list, 'event_parameters.' ) -%}
+{%- set eventParamsToIgnoreInGroupBy = get_event_parameter_tuples_for_rollup_dimensions_to_ignore() -%}
+{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
+
+{%- set userPropertiesToIgnoreInGroupBy = get_user_property_tuples_for_rollup_dimensions_to_ignore() -%}
+{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
+
+{%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
 
 {%- set tmp_res = overbase_firebase.get_filtered_columns_for_table("fb_analytics_events_raw", columnNamesEventDimensions, miniColumnsToIgnore) -%}
 {%- set columnsForEventDimensions = tmp_res[0] -%}

@@ -24,8 +24,8 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as created_at
         , STRUCT<firebase_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, normalized INT64>(
             device.operating_system_version, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "major") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "minor") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "bugfix") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "major.minor") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "normalized") }}
         ) AS platform_version
-        , {{ overbase_firebase.generate_struct_for_user_properties() }} as user_properties
-        , {{ overbase_firebase.generate_struct_for_event_parameters() }} as event_parameters
+        , {{ overbase_firebase.generate_struct_for_raw_user_properties() }} as user_properties
+        , {{ overbase_firebase.generate_struct_for_raw_event_parameters() }} as event_parameters
         , STRUCT<city STRING , firebase_value STRING, iso_country_name STRING , iso_country_alpha_2 STRING, continent STRING, region STRING, sub_continent STRING, metro STRING>(
             geo.city, geo.country, country_codes.name, country_codes.alpha_2, geo.continent, geo.region , geo.sub_continent, geo.metro
         ) as geo

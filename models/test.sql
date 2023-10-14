@@ -1,7 +1,9 @@
 
-SELECT app_info.version, COUNT(1) as cnt, COUNT(DISTINCT(user_pseudo_id)) as users
-FROM {{ source("firebase_analytics", "events") }}  as events
-WHERE True 
-AND _TABLE_SUFFIX = '20231010'
-GROUP BY 1
-ORDER BY 2 DESC
+{{ get_event_parameter_tuples_all() | map(attribute=0) | list }}
+
+
+{{ get_event_parameter_tuples_for_rollup_dimensions() | map(attribute=0) | list }}
+
+
+
+{{ get_event_parameter_tuples_for_rollup_dimensions_to_ignore() | map(attribute=0) | list }}
