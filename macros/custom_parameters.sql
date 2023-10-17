@@ -39,7 +39,7 @@
 
 {%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', []) -%}
 {%- for exclusion in miniColumnExclusions %}
-        {{ miniColumnsToIgnoreInGroupBy.append(exclusion['fully_qualified_name']) }}
+        {{ miniColumnsToIgnoreInGroupBy.append(exclusion) }}
 {% endfor %}
 
 {{ return(miniColumnsToIgnoreInGroupBy) }}

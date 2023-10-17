@@ -10,16 +10,16 @@
     -- require_partition_filter = false
 
 {%- if is_incremental() -%}
-    {%- set dateCondition = "created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL " ~ var("OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS") ~ " DAY)" -%}
+    {%- set dateCondition = "created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL " ~ var("OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS", "5") ~ " DAY)" -%}
 {%- else -%}
-    {%- set dateCondition = "created_at >= '" ~ var("OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE") ~ "'" -%}
+    {%- set dateCondition = "created_at >= '" ~ var("OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE", "2018-01-01") ~ "'" -%}
 {%- endif %}
 
  
 WITH  custom_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }}
-        AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT")|length > 0 -%}
-                event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT") }}'
+        AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "")|length > 0 -%}
+                event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "") }}'
             {%- else -%}
                 False
             {%- endif %}
