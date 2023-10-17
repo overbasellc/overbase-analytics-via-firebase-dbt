@@ -1,7 +1,4 @@
 
-{{ get_event_parameter_tuples_all() | map(attribute=0) | list }}
+{%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.get_mini_columns_to_ignore_when_rolling_up() -%}
 
-
-{{ get_event_parameter_tuples_for_rollup_dimensions() | map(attribute=0) | list }}
-
-
+{{ miniColumnsToIgnoreInGroupBy }}

@@ -39,7 +39,9 @@ vars:
     "OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT": "" # optional e.g. attributed_first_open
     "OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS": 5
     "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # mandatory
-
+    "OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS":  # optional, what built-in OB dimensions to exclude from bubbling up in the rollups (& save the row count)
+      - { fully_qualified_name: geo.city} 
+      - { fully_qualified_name: geo.metro} 
     # "OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
           # - { property_name: up_just_in_raw, data_type: 'string'} 
     #       - { property_name: first_open_time, data_type: 'int'} 

@@ -36,6 +36,12 @@
 {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
 
 {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
+
+{%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', []) -%}
+{%- for exclusion in miniColumnExclusions %}
+        {{ miniColumnsToIgnoreInGroupBy.append(exclusion['fully_qualified_name']) }}
+{% endfor %}
+
 {{ return(miniColumnsToIgnoreInGroupBy) }}
 {%- endmacro -%}
 
