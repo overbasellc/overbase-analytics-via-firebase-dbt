@@ -1,12 +1,12 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "created_at",
-      "data_type": "timestamp",
+      "field": "created_date",
+      "data_type": "date",
       "granularity": "day"
      }
 ) }}
 
-SELECT *
-FROM {{ ref("fb_analytics_events_wid") }}
-FROM {{ ref("fb_analytics_installs") }}
+SELECT 1
+{# FROM {{ ref("fb_analytics_events_wid") }} #}
+{# FROM {{ ref("fb_analytics_installs") }} #}
