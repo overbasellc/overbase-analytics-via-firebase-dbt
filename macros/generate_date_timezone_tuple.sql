@@ -3,10 +3,10 @@
 #}
 {%- macro generate_date_timezone_struct(tsField) -%}
     STRUCT<
-    {%- for timezoneTuple in generate_date_timezone_tuple(tsField) -%}
+    {%- for timezoneTuple in overbase_firebase.generate_date_timezone_tuple(tsField) -%}
             {{ timezoneTuple[0] }} DATE {{ ", " if not loop.last else "" }}
     {%- endfor -%}>(
-    {% for timezoneTuple in generate_date_timezone_tuple(tsField) -%}
+    {% for timezoneTuple in overbase_firebase.generate_date_timezone_tuple(tsField) -%}
             {{ timezoneTuple[1] }}  {{ ", " if not loop.last else "" }}
     {%- endfor -%}
     )
