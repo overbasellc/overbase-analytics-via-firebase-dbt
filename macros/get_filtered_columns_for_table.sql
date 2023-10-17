@@ -13,7 +13,7 @@
     {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
     {%- set columnsUnnestedCount = [] -%}
 
-    {%- set columns = convert_columns_to_dicts(adapter.get_columns_in_relation(ref(table_name))) -%}
+    {%- set columns = overbase_firebase.convert_columns_to_dicts(adapter.get_columns_in_relation(ref(table_name))) -%}
     {%- set columnsToGroupBy = [] -%}
 
     {%- for column in columns -%}
