@@ -8,15 +8,15 @@
 ) }}
 
 
-{%- set columnNamesEventDimensions = ["created_dates", "app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
+{%- set columnNamesEventDimensions = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
-                                "traffic_source"
+                                "traffic_source", "created_dates"
 ] -%}
 {%- set columnNamesInstallDimensions = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
-                                "traffic_source"
+                                "traffic_source", "installed_dates"
 ] -%}
 
 {%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.get_mini_columns_to_ignore_when_rolling_up() -%}
