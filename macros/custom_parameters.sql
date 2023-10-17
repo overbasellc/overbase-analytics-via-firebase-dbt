@@ -37,7 +37,7 @@
 
 {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
 
-{%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', ["geo.city", "geo.metro"]) -%}
+{%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', ["geo.city", "geo.metro", "geo.region"]) -%}
 {%- for exclusion in miniColumnExclusions %}
         {{ miniColumnsToIgnoreInGroupBy.append(exclusion) }}
 {% endfor %}
