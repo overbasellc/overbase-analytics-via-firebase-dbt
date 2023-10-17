@@ -27,6 +27,17 @@
     {{ return(all_complete_parameters) }}
 {%- endmacro %}
 
+{# e.g. [event_parameters.call_id_string (a raw only custom property), event_parameters.quantity_int (a rollup_metric custom property)] #}
+{%- macro get_mini_columns_to_ignore_when_rolling_up() -%}
+{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
+{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
+
+{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
+{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
+
+{%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
+{{ return(miniColumnsToIgnoreInGroupBy) }}
+{%- endmacro -%}
 
 {# ################################### #}
 {# Helper Macros #}

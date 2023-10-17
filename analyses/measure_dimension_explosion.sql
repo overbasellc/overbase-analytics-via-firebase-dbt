@@ -3,17 +3,9 @@
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
                                 "traffic_source"
 ] -%}
-{%- set metricsToIgnore = overbase_firebase.get_event_parameter_tuples_metrics_only() -%}
-{%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(metricsToIgnore|map(attribute=5)|list, 'event_parameters.' ) -%}
 
-{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
-{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
 
-{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw() + overbase_firebase.get_user_property_tuples_for_rollup_dimensions() -%}
-{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
-
-{%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
-
+{%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.get_mini_columns_to_ignore_when_rolling_up() -%}
 
 {# Ignore all time zones except the first & last (they're all the same, just save the computational effort) #}
 {%- set timezones = overbase_firebase.generate_date_timezone_tuple('dont care') | map(attribute=0) | list -%}
