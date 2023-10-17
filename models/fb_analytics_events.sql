@@ -40,5 +40,5 @@ SELECT created_date
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
         , cnt
         , users
-        , {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
+        {{ ", " if custom_summed_metrics|length > 0 else "" }}  {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
 FROM data
