@@ -38,7 +38,8 @@ vars:
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
     "OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT": "" # optional e.g. attributed_first_open
     "OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS": 5
-    "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # optional e.g. attributed_first_open
+    "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # mandatory
+
     # "OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
           # - { property_name: up_just_in_raw, data_type: 'string'} 
     #       - { property_name: first_open_time, data_type: 'int'} 
