@@ -29,15 +29,15 @@
 
 {# e.g. [event_parameters.call_id_string (a raw only custom property), event_parameters.quantity_int (a rollup_metric custom property)] #}
 {%- macro get_mini_columns_to_ignore_when_rolling_up() -%}
-{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
+{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw_only() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
 {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
 
-{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
+{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw_only() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
 {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
 
 {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
 
-{%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', []) -%}
+{%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', ["geo.city", "geo.metro"]) -%}
 {%- for exclusion in miniColumnExclusions %}
         {{ miniColumnsToIgnoreInGroupBy.append(exclusion) }}
 {% endfor %}
@@ -57,11 +57,11 @@
 {%- do return(result) -%}
 {%- endmacro %}
 
-{%- macro get_user_property_tuples_for_raw() -%}
-{%- do return(overbase_firebase.get_user_property_tuples_all()) -%}
-{# {%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'raw') | list -%} #}
-{# {%- set result = result + overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'undefined') | list -%} #}
-{# {%- do return(result) -%} #}
+{%- macro get_user_property_tuples_for_raw_only() -%}
+{%- set result  = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'raw') | list -%}
+{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', '') | list -%}
+{%- set result3 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'undefined') | list -%}
+{%- do return(result + result2 + result3) -%}
 {%- endmacro %}
 
 
@@ -76,8 +76,11 @@
 {%- endmacro %}
 
 
-{%- macro get_event_parameter_tuples_for_raw() -%}
-{%- do return(overbase_firebase.get_event_parameter_tuples_all()) -%}
+{%- macro get_event_parameter_tuples_for_raw_only() -%}
+{%- set result  = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'raw') | list -%}
+{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', '') | list -%}
+{%- set result3 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'undefined') | list -%}
+{%- do return(result + result2 + result3) -%}
 {%- endmacro %}
 
 

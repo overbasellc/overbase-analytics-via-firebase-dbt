@@ -1,9 +1,9 @@
 {% macro generate_struct_for_raw_user_properties() -%}
-    {{ overbase_firebase.generate_struct(overbase_firebase.get_user_property_tuples_for_raw(), 'user_properties') }}
+    {{ overbase_firebase.generate_struct(overbase_firebase.get_user_property_tuples_all(), 'user_properties') }}
 {%- endmacro%}
 
 {% macro generate_struct_for_raw_event_parameters() -%}
-    {{ overbase_firebase.generate_struct(overbase_firebase.get_event_parameter_tuples_for_raw(), 'event_params') }}
+    {{ overbase_firebase.generate_struct(overbase_firebase.get_event_parameter_tuples_all(), 'event_params') }}
 {%- endmacro%}
 
 
