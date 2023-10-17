@@ -28,6 +28,8 @@
 {%- endmacro %}
 
 
+{# ################################### #}
+{# Helper Macros #}
 {%- macro get_user_property_tuples_for_rollup_metrics() -%}
 {%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'metric') | list -%}
 {%- do return(result) -%}
@@ -37,14 +39,6 @@
 {%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
-
-{# all() - rollup_dimensions() #}
-{%- macro get_user_property_tuples_for_rollup_dimensions_to_ignore() -%}
-{%- set all = overbase_firebase.get_user_property_tuples_all() -%}
-{%- set rollup = overbase_firebase.get_user_property_tuples_for_rollup_dimensions() -%}
-{%- do return(all | reject('in', rollup) | list) -%}
-{%- endmacro %}
-
 
 {%- macro get_user_property_tuples_for_raw() -%}
 {%- do return(overbase_firebase.get_user_property_tuples_all()) -%}
@@ -62,13 +56,6 @@
 {%- macro get_event_parameter_tuples_for_rollup_dimensions() -%}
 {%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
 {%- do return(result) -%}
-{%- endmacro %}
-
-{# all() - rollup_dimensions() #}
-{%- macro get_event_parameter_tuples_for_rollup_dimensions_to_ignore() -%}
-{%- set all = overbase_firebase.get_event_parameter_tuples_all() -%}
-{%- set rollup = overbase_firebase.get_event_parameter_tuples_for_rollup_dimensions() -%}
-{%- do return(all | reject('in', rollup) | list) -%}
 {%- endmacro %}
 
 
