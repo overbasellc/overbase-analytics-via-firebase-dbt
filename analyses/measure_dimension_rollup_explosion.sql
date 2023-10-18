@@ -8,7 +8,7 @@
 {%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.get_mini_columns_to_ignore_when_rolling_up() -%}
 
 {# Ignore all time zones except the first & last (they're all the same, just save the computational effort) #}
-{%- set timezones = overbase_firebase.generate_date_timezone_tuple('dont care') | map(attribute=0) | list -%}
+{%- set timezones = overbase_firebase.generate_date_timezone_age_struct('dont care') | map(attribute=0) | list -%}
 {%- set timezones = timezones[1:-1] -%}
 {%- set miniColumnsToIgnoreInGroupBy = miniColumnsToIgnoreInGroupBy + overbase_firebase.list_map_and_add_prefix(timezones, 'created_dates.') + overbase_firebase.list_map_and_add_prefix(timezones, 'installed_dates.') -%}
 
