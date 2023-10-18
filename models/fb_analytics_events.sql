@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "created_date",
+      "field": "event_date",
       "data_type": "date",
       "granularity": "day"
      }
@@ -11,7 +11,7 @@
 {%- set columnNamesEventDimensions = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
-                                "traffic_source", "created_dates"
+                                "traffic_source", "event_dates"
 ] -%}
 
 {%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.get_mini_columns_to_ignore_when_rolling_up() -%}
@@ -27,7 +27,7 @@
 {%- endfor -%}
 
 WITH data as (
-    SELECT    DATE(created_at) as created_date
+    SELECT   DATE(event_ts) as event_date
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
@@ -36,7 +36,7 @@ WITH data as (
     FROM {{ ref("fb_analytics_events_raw") }}
     GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
-SELECT created_date
+SELECT event_date
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
         , cnt
         , users

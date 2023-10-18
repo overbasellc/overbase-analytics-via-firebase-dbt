@@ -2,14 +2,14 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "created_at",
+      "field": "event_ts",
       "data_type": "timestamp",
       "granularity": "day"
      }
 ) }}
 
-SELECT    TIMESTAMP_MICROS(event_timestamp) as created_at
-        , TIMESTAMP_MICROS(user_first_touch_timestamp) as installed_at
+SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
+        , TIMESTAMP_MICROS(user_first_touch_timestamp) as install_ts
         , {{ overbase_firebase.calculate_age_between_timestamps("TIMESTAMP_MICROS(event_timestamp)", "TIMESTAMP_MICROS(user_first_touch_timestamp)") }} as install_age
         , user_pseudo_id
         , user_id
@@ -45,8 +45,8 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as created_at
         , STRUCT<firebase_app_id STRING, stream_id STRING, advertising_id STRING>(
             app_info.firebase_app_id, stream_id, device.advertising_id
         ) as other_ids
-        , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(event_timestamp)') }} as created_dates
-        , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as installed_dates
+        , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(event_timestamp)') }} as event_dates
+        , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as install_dates
         , COUNT(1) OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) as duplicates_cnt
 FROM {{ source("firebase_analytics", "events") }}  as events
 LEFT JOIN {{ref('iso_country')}} as country_codes

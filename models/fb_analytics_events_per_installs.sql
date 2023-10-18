@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "created_date",
+      "field": "event_date",
       "data_type": "date",
       "granularity": "day"
      }

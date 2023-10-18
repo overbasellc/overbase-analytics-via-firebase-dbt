@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "installed_at",
+      "field": "event_ts",
       "data_type": "timestamp",
       "granularity": "day"
      }
@@ -10,9 +10,9 @@
     -- require_partition_filter = false
 
 {%- if is_incremental() -%}
-    {%- set dateCondition = "created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL " ~ var("OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS", "5") ~ " DAY)" -%}
+    {%- set dateCondition = "event_ts >= DATE_SUB(CURRENT_DATE(), INTERVAL " ~ var("OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS", "5") ~ " DAY)" -%}
 {%- else -%}
-    {%- set dateCondition = "created_at >= '" ~ var("OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE", "2018-01-01") ~ "'" -%}
+    {%- set dateCondition = "event_ts >= '" ~ var("OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE", "2018-01-01") ~ "'" -%}
 {%- endif %}
 
  
@@ -23,15 +23,15 @@ WITH  custom_install_event AS (
             {%- else -%}
                 False
             {%- endif %}
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY created_at) = 1
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , ob_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }} AND event_name = 'ob_first_open'
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY created_at) = 1
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , fb_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }} AND event_name = 'first_open'
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY created_at) = 1
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 
 {%- set miniColumnsToIgnoreInGroupBy = ["duplicates_cnt"] -%}

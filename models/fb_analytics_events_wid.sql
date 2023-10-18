@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
     partition_by={
-      "field": "created_date",
+      "field": "event_date",
       "data_type": "date",
       "granularity": "day"
      }
@@ -11,12 +11,12 @@
 {%- set columnNamesEventDimensions = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
-                                "traffic_source", "created_dates"
+                                "traffic_source", "event_dates"
 ] -%}
 {%- set columnNamesInstallDimensions = ["app_id", "event_name", "platform", "appstore", "app_version", "platform_version",
                                 "user_properties", "event_parameters",
                                 "geo", "device_hardware", "device_language", "device_time_zone_offset",
-                                "traffic_source", "installed_dates"
+                                "traffic_source", "install_dates"
 ] -%}
 
 {%- set miniColumnsToIgnoreInGroupBy = overbase_firebase.get_mini_columns_to_ignore_when_rolling_up() -%}
@@ -41,13 +41,13 @@
 {%- endfor -%}
 
 WITH data as (
-    SELECT    DATE(events.created_at) as created_date
+    SELECT    DATE(events.event_ts) as event_date
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "events.", "event_") }}
 
-            , DATE(installs.installed_at) as installed_date
+            , DATE(installs.install_ts) as installed_date
             , events.install_age as install_age
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstalledDatesDimension, miniColumnsToIgnoreInGroupBy, "installs.", "") }}
-            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "installs.", "install_") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "installs.", "installed_") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(events.user_pseudo_id)) as users
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
@@ -57,10 +57,10 @@ WITH data as (
     -- TODO: max join on installs ?
     GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
-SELECT created_date
+SELECT event_date
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "event_", "") }}
-        , installed_date
         , install_age
+        , install_date
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForInstalledDatesDimension, miniColumnsToIgnoreInGroupBy, "", "") }}
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "install_", "install_") }}
         , cnt
