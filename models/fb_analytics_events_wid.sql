@@ -45,6 +45,7 @@ WITH data as (
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "events.", "event_") }}
 
             , DATE(installs.installed_at) as installed_date
+            , events.install_age as install_age
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstalledDatesDimension, miniColumnsToIgnoreInGroupBy, "installs.", "") }}
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "installs.", "install_") }}
             , COUNT(1) as cnt
@@ -54,11 +55,12 @@ WITH data as (
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
     -- TODO: max join on installs ?
-    GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
+    GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT created_date
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "event_", "") }}
         , installed_date
+        , install_age
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForInstalledDatesDimension, miniColumnsToIgnoreInGroupBy, "", "") }}
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "install_", "install_") }}
         , cnt
