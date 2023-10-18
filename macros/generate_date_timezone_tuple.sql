@@ -15,7 +15,10 @@
 {#  STRUCT<minus_12 DATE , minus_11 DATE , minus_10 DATE , minus_9 DATE , minus_8 DATE , minus_7 DATE , minus_6 DATE , minus_5 DATE , minus_4 DATE , minus_3 DATE , minus_2 DATE , minus_1 DATE , plus_1 DATE , plus_2 DATE , plus_3 DATE , plus_4 DATE , plus_5 DATE , plus_6 DATE , plus_7 DATE , plus_8 DATE , plus_9 DATE , plus_10 DATE , plus_11 DATE , plus_12 DATE >(
     CAST(FLOOR(SAFE_DIVIDE(DATETIME_DIFF(DATETIME(TIMESTAMP_MICROS(event_timestamp), '-12:00')
                                        , DATETIME(TIMESTAMP_MICROS(event_timestamp), '-12:00')
-                            , MINUTE), 1440.0) AS INT64))
+                            , MINUTE), 1440.0)) AS INT64)
+
+Turns out this isn't acutally needed, because the install_age in UTC, that takes into account the first 24h would yield the same value in all timezones.
+  {{ overbase_firebase.generate_date_timezone_age_struct('TIMESTAMP_MICROS(event_timestamp)', 'TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as install_ages 
 #}
 {%- macro generate_date_timezone_age_struct(tsField1, tsField2) -%}
     STRUCT<

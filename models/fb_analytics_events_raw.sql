@@ -47,7 +47,6 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as created_at
         ) as other_ids
         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(event_timestamp)') }} as created_dates
         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as installed_dates
-        , {{ overbase_firebase.generate_date_timezone_age_struct('TIMESTAMP_MICROS(event_timestamp)', 'TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as install_ages
         , COUNT(1) OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) as duplicates_cnt
 FROM {{ source("firebase_analytics", "events") }}  as events
 LEFT JOIN {{ref('iso_country')}} as country_codes
