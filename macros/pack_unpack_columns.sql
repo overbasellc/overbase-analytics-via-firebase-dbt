@@ -5,9 +5,10 @@
         ("$tablePrefix.app_version.major", "$aliasPrefix.app_version_major")
         ("$tablePrefix.app_version.minor", "$aliasPrefix.app_version_minor")]
 #}
-{%- macro unpack_columns_into_minicolumns_array(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
+{%- macro unpack_columns_into_minicolumns_array(columns, miniColumnsToIgnore, miniColumnsToNil, tablePrefix, aliasPrefix) -%}
     {%- set result = [] -%}
     {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
+    {%- set miniColumnsToNilSet = set(miniColumnsToNil) -%}
     {%- for column in columns -%}
         {%- if not column["data_type"].startswith('STRUCT') -%}
             {%- set _ = result.append( (tablePrefix ~ column["name"], aliasPrefix ~ column["name"]) ) -%}
@@ -16,7 +17,11 @@
             {# STRUCT<ob_view_name_string STRING, ob_view_type_string STRING -> ["ob_view_name_string", "STRING", "ob_view_type_string", "STRING"] #}
             {%- for structMiniColumn in column["data_type"][7:-1].split(' ')[::2] -%}
                 {%- if column["name"] ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
-                    {%- set _ = result.append( (tablePrefix ~ column["name"] ~ "." ~ structMiniColumn, aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
+                    {%- if column["name"] ~ "." ~ structMiniColumn in miniColumnsToNil %}
+                        {%- set _ = result.append( ("'nil'", aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
+                    {%- else -%}
+                        {%- set _ = result.append( (tablePrefix ~ column["name"] ~ "." ~ structMiniColumn, aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
+                    {%- endif -%}
                 {%- endif -%}
             {%- endfor -%}
         {%- endif -%}
@@ -34,8 +39,8 @@
     , app_version.major_minor as app_version_major_minor
     , app_version.normalized as app_version_normalized
 #}
-{%- macro unpack_columns_into_minicolumns(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
-    {%- set minicolumns = overbase_firebase.unpack_columns_into_minicolumns_array(columns, miniColumnsToIgnore, tablePrefix, aliasPrefix) -%}
+{%- macro unpack_columns_into_minicolumns(columns, miniColumnsToIgnore, miniColumnsToNil, tablePrefix, aliasPrefix) -%}
+    {%- set minicolumns = overbase_firebase.unpack_columns_into_minicolumns_array(columns, miniColumnsToIgnore, miniColumnsToNil, tablePrefix, aliasPrefix) -%}
     {%- for minicolumn in minicolumns -%}
                    {{ ", " if not loop.first else "" }} {{ minicolumn[0] ~ " AS " ~ minicolumn[1] }}
     {% endfor -%}

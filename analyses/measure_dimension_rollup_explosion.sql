@@ -17,7 +17,7 @@
 {%- set columnsForEventDimensions = tmp_res[0] -%}
 
 
-{%- set minicolumns = overbase_firebase.unpack_columns_into_minicolumns_array(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") -%}
+{%- set minicolumns = overbase_firebase.unpack_columns_into_minicolumns_array(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") -%}
 {%- set unionAllSelects = [] -%}
 
 WITH

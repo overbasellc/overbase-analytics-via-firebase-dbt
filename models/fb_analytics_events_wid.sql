@@ -42,11 +42,11 @@
 
 WITH data as (
     SELECT    DATE(events.event_ts) as event_date
-            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "events.", "event_") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy,[],"events.", "event_") }}
 
             , DATE(installs.install_ts) as install_date
             , events.install_age as install_age
-            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "installs.", "install_") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy,[], "installs.", "install_") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(events.user_pseudo_id)) as users
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
@@ -56,6 +56,24 @@ WITH data as (
     -- TODO: max join on installs ?
     GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
+{%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_nil_when_rolling_up() -%}
+, nillableData as (
+    SELECT    DATE(events.event_ts) as event_date
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, miniColumnsToAlsoNil ,"events.", "event_") }}
+
+            , DATE(installs.install_ts) as install_date
+            , events.install_age as install_age
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy,miniColumnsToAlsoNil, "installs.", "install_") }}
+            , COUNT(1) as cnt
+            , COUNT(DISTINCT(events.user_pseudo_id)) as users
+            {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
+
+    FROM {{ ref("fb_analytics_events_raw") }} as events
+    LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
+    -- TODO: max join on installs ?
+    GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
+)
+
 SELECT event_date
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "event_", "") }}
         , install_age
@@ -65,3 +83,16 @@ SELECT event_date
         , users
         , {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
 FROM data
+
+UNION ALL 
+
+
+SELECT event_date
+        , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "event_", "") }}
+        , install_age
+        , install_date
+        , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForInstallDimensions, miniColumnsToIgnoreInGroupBy, "install_", "install_") }}
+        , cnt
+        , users
+        , {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
+FROM nillableData

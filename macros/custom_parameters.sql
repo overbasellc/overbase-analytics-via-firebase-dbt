@@ -16,9 +16,9 @@
 {% macro get_event_parameter_tuples_all() -%}
     {% set builtin_parameters = [ 
             ("ob_view_name", "STRING", "dimension")
-           ,("ob_view_type", "STRING", "dimension")
+           ,("ob_view_type", "STRING", "nillableDimension")
            ,("ob_parent_view_name", "STRING", "dimension")
-           ,("ob_parent_view_type", "STRING", "dimension")
+           ,("ob_parent_view_type", "STRING", "nillableDimension")
            ,("ob_name", "STRING", "dimension")
     ]%}
     {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) -%}
@@ -29,21 +29,34 @@
 
 {# e.g. [event_parameters.call_id_string (a raw only custom property), event_parameters.quantity_int (a rollup_metric custom property)] #}
 {%- macro get_mini_columns_to_ignore_when_rolling_up() -%}
-{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw_only() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
-{%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
+    {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw_only() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
+    {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
 
-{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw_only() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
-{%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
+    {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw_only() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
+    {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
 
-{%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
+    {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
 
-{%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', ["geo.city", "geo.metro", "geo.region"]) -%}
-{%- for exclusion in miniColumnExclusions %}
-        {{ miniColumnsToIgnoreInGroupBy.append(exclusion) }}
-{% endfor %}
+    {%- set miniColumnExclusions = var('OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS', ["geo.city", "geo.metro", "geo.region"]) -%}
+    {%- for exclusion in miniColumnExclusions %}
+            {{ miniColumnsToIgnoreInGroupBy.append(exclusion) }}
+    {% endfor %}
 
-{{ return(miniColumnsToIgnoreInGroupBy) }}
+    {{ return(miniColumnsToIgnoreInGroupBy) }}
 {%- endmacro -%}
+
+{%- macro get_mini_columns_to_also_nil_when_rolling_up() -%}
+    {%- set eventParamsToNil = overbase_firebase.get_event_parameter_tuples_for_rollup_nillableDimensions() -%}
+    {%- set eventParamsToNil = overbase_firebase.list_map_and_add_prefix(eventParamsToNil|map(attribute=5)|list, 'event_parameters.' ) -%}
+
+    {%- set userPropertiesToNil = overbase_firebase.get_user_property_tuples_for_rollup_nillableDimensions() -%}
+    {%- set userPropertiesToNil = overbase_firebase.list_map_and_add_prefix(userPropertiesToNil|map(attribute=5)|list, 'user_properties.' ) -%}
+
+    {%- set miniColumnsToNil = eventParamsToNil + userPropertiesToNil -%}
+
+    {{ return(miniColumnsToNil) }}
+{%- endmacro -%}
+
 
 {# ################################### #}
 {# Helper Macros #}
@@ -54,6 +67,12 @@
 
 {%- macro get_user_property_tuples_for_rollup_dimensions() -%}
 {%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
+{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
+{%- do return(result + result2) -%}
+{%- endmacro %}
+
+{%- macro get_user_property_tuples_for_rollup_nillableDimensions() -%}
+{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
@@ -72,6 +91,12 @@
 
 {%- macro get_event_parameter_tuples_for_rollup_dimensions() -%}
 {%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
+{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
+{%- do return(result + result2) -%}
+{%- endmacro %}
+
+{%- macro get_event_parameter_tuples_for_rollup_nillableDimensions() -%}
+{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
@@ -119,7 +144,7 @@
 {%- macro validate_parameter_tuples(tuples) -%}
     {%- for tuple in tuples -%}
         {%- set rollupType = tuple[2] -%}
-        {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'metric'] -%}
+        {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'nillableDimension', 'metric'] -%}
                 {{ exceptions.raise_compiler_error(" 'rollup_type' '" + rollupType + "' not supported (only 'raw', 'dimension', 'metric' supported). Looking at parameter:" + tuple[0]) }}
         {%- endif -%}
     {%- endfor -%}
