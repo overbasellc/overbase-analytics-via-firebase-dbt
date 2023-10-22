@@ -16,9 +16,9 @@
 {% macro get_event_parameter_tuples_all() -%}
     {% set builtin_parameters = [ 
             ("ob_view_name", "STRING", "dimension")
-           ,("ob_view_type", "STRING", "nillableDimension")
+           ,("ob_view_type", "STRING", "alsoForceNullDimension")
            ,("ob_parent_view_name", "STRING", "dimension")
-           ,("ob_parent_view_type", "STRING", "nillableDimension")
+           ,("ob_parent_view_type", "STRING", "alsoForceNullDimension")
            ,("ob_name", "STRING", "dimension")
     ]%}
     {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) -%}
@@ -45,11 +45,11 @@
     {{ return(miniColumnsToIgnoreInGroupBy) }}
 {%- endmacro -%}
 
-{%- macro get_mini_columns_to_also_nil_when_rolling_up() -%}
-    {%- set eventParamsToNil = overbase_firebase.get_event_parameter_tuples_for_rollup_nillableDimensions() -%}
+{%- macro get_mini_columns_to_also_force_null_when_rolling_up() -%}
+    {%- set eventParamsToNil = overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() -%}
     {%- set eventParamsToNil = overbase_firebase.list_map_and_add_prefix(eventParamsToNil|map(attribute=5)|list, 'event_parameters.' ) -%}
 
-    {%- set userPropertiesToNil = overbase_firebase.get_user_property_tuples_for_rollup_nillableDimensions() -%}
+    {%- set userPropertiesToNil = overbase_firebase.get_user_property_tuples_for_rollup_alsoNullDimensions() -%}
     {%- set userPropertiesToNil = overbase_firebase.list_map_and_add_prefix(userPropertiesToNil|map(attribute=5)|list, 'user_properties.' ) -%}
 
     {%- set miniColumnsToNil = eventParamsToNil + userPropertiesToNil -%}
@@ -67,12 +67,12 @@
 
 {%- macro get_user_property_tuples_for_rollup_dimensions() -%}
 {%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
-{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
+{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result + result2) -%}
 {%- endmacro %}
 
-{%- macro get_user_property_tuples_for_rollup_nillableDimensions() -%}
-{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
+{%- macro get_user_property_tuples_for_rollup_alsoNullDimensions() -%}
+{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
@@ -91,12 +91,12 @@
 
 {%- macro get_event_parameter_tuples_for_rollup_dimensions() -%}
 {%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
-{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
+{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result + result2) -%}
 {%- endmacro %}
 
-{%- macro get_event_parameter_tuples_for_rollup_nillableDimensions() -%}
-{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'nillableDimension') | list -%}
+{%- macro get_event_parameter_tuples_for_rollup_alsoNullDimensions() -%}
+{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
@@ -144,7 +144,7 @@
 {%- macro validate_parameter_tuples(tuples) -%}
     {%- for tuple in tuples -%}
         {%- set rollupType = tuple[2] -%}
-        {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'nillableDimension', 'metric'] -%}
+        {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'alsoForceNullDimension', 'metric'] -%}
                 {{ exceptions.raise_compiler_error(" 'rollup_type' '" + rollupType + "' not supported (only 'raw', 'dimension', 'metric' supported). Looking at parameter:" + tuple[0]) }}
         {%- endif -%}
     {%- endfor -%}

@@ -18,7 +18,7 @@
             {%- for structMiniColumn in column["data_type"][7:-1].split(' ')[::2] -%}
                 {%- if column["name"] ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
                     {%- if column["name"] ~ "." ~ structMiniColumn in miniColumnsToNil %}
-                        {%- set _ = result.append( ("'nil'", aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
+                        {%- set _ = result.append( ("'ob-forced-null'", aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
                     {%- else -%}
                         {%- set _ = result.append( (tablePrefix ~ column["name"] ~ "." ~ structMiniColumn, aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
                     {%- endif -%}

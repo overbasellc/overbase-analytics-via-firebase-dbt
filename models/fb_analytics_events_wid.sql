@@ -56,7 +56,7 @@ WITH data as (
     -- TODO: max join on installs ?
     GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
-{%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_nil_when_rolling_up() -%}
+{%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
 , nillableData as (
     SELECT    DATE(events.event_ts) as event_date
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, miniColumnsToAlsoNil ,"events.", "event_") }}

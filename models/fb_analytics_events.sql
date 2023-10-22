@@ -28,26 +28,29 @@
 
 WITH data as (
     SELECT   DATE(event_ts) as event_date
+            , IF(install_age = 0, 'Age 0', 'Age > 0') as install_age_group
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
-    GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
+    GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
-{%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_nil_when_rolling_up() -%}
+{%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
 , nillableData as (
       SELECT   DATE(event_ts) as event_date
+            , IF(install_age = 0, 'Age 0', 'Age > 0') as install_age_group
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, miniColumnsToAlsoNil, "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
-    GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
+    GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT event_date
+        , install_age_group
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
         , cnt
         , users
@@ -57,6 +60,7 @@ FROM data
 UNION ALL 
 
 SELECT event_date
+        , install_age_group
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
         , cnt
         , users
