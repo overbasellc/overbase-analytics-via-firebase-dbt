@@ -40,8 +40,12 @@ vars:
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT": "" # optional e.g. attributed_first_open
-    # "OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS":  # optional
+    # "OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS":  # optional
+    # "OVERBASE:FIREBASE_CRASHLYTICS_DEFAULT_INCREMENTAL_DAYS":  # optional
     # "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # mandatory
+    # "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_END_DATE": "2019-01-05" #optional, if you want to make
+    # "OVERBASE:FIREBASE_CRASHLYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # mandatory
+    # "OVERBASE:FIREBASE_CRASHLYTICS_FULL_REFRESH_END_DATE": "20219-01-05" #optional, if you want to make
     # "OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS":  # optional, what built-in OB dimensions to exclude from bubbling up in the rollups (& save the row count)
     #   - geo.city
     #   - geo.metro

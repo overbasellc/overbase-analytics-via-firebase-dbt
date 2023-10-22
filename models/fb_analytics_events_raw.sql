@@ -1,11 +1,12 @@
 {{ overbase_firebase.verify_all_overbase_mandatory_variables() }}
 {{ config(
-    materialized='table',
+    materialized='incremental',
     partition_by={
       "field": "event_ts",
       "data_type": "timestamp",
       "granularity": "day"
-     }
+     },
+     incremental_strategy = 'insert_overwrite'
 ) }}
 
 SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
@@ -57,5 +58,6 @@ LEFT JOIN {{ref('iso_country')}} as language_region_codes -- some language have 
     ON LOWER(ARRAY_REVERSE(SPLIT(events.device.language,'-'))[SAFE_OFFSET(0)]) = language_region_codes.alpha_2
 
 WHERE True 
-AND _TABLE_SUFFIX LIKE 'intraday%'
+AND {{ overbase_firebase.analyticsTableSuffixFilter() }}
+
 QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) = 1

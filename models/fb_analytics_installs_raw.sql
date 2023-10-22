@@ -1,23 +1,18 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
     partition_by={
       "field": "event_ts",
       "data_type": "timestamp",
       "granularity": "day"
-     }
+     },
+    incremental_strategy = 'insert_overwrite'
 ) }}
     -- incremental_strategy='insert_overwrite',
     -- require_partition_filter = false
 
-{%- if is_incremental() -%}
-    {%- set dateCondition = "event_ts >= DATE_SUB(CURRENT_DATE(), INTERVAL " ~ var("OVERBASE:FIREBASE_DEFAULT_INCREMENTAL_DAYS", "5") ~ " DAY)" -%}
-{%- else -%}
-    {%- set dateCondition = "event_ts >= '" ~ var("OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE", "2018-01-01") ~ "'" -%}
-{%- endif %}
-
  
 WITH  custom_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
         AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "")|length > 0 -%}
                 event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "") }}'
             {%- else -%}
@@ -26,11 +21,11 @@ WITH  custom_install_event AS (
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , ob_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }} AND event_name = 'ob_first_open'
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'ob_first_open' AND {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , fb_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ dateCondition }} AND event_name = 'first_open'
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'first_open' AND {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 

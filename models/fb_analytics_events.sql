@@ -1,10 +1,11 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
     partition_by={
       "field": "event_date",
       "data_type": "date",
       "granularity": "day"
-     }
+     },
+    incremental_strategy = 'insert_overwrite'
 ) }}
 
 
@@ -35,6 +36,7 @@ WITH data as (
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
+    WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
     GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 {%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
@@ -47,6 +49,7 @@ WITH data as (
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
+    WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
     GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT event_date

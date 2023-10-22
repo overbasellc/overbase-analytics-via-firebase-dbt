@@ -1,10 +1,11 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
     partition_by={
       "field": "event_date",
       "data_type": "date",
       "granularity": "day"
-     }
+     },
+    incremental_strategy = 'insert_overwrite'
 ) }}
 
 
@@ -53,6 +54,7 @@ WITH data as (
 
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
+    WHERE {{ overbase_firebase.analyticsTSFilterFor('events.event_ts') }}
     -- TODO: max join on installs ?
     GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
@@ -70,6 +72,7 @@ WITH data as (
 
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
+    WHERE {{ overbase_firebase.analyticsTSFilterFor('events.event_ts') }}
     -- TODO: max join on installs ?
     GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )

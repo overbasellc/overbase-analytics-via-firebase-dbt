@@ -11,5 +11,8 @@
 {{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_PROJECT_ID", "overbase") -}}
 {{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_ANALYTICS_DATASET_ID", "firebase_analytics_raw_test") -}}
 {{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE", "2018-01-01") -}}
+{{- overbase_firebase.compile_time_mandatory_var("OVERBASE:FIREBASE_CRASHLYTICS_FULL_REFRESH_START_DATE", "2018-01-01") -}}
+
+
 
 {%- endmacro %}
