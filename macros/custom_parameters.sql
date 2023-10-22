@@ -145,7 +145,7 @@
     {%- for tuple in tuples -%}
         {%- set rollupType = tuple[2] -%}
         {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'alsoForceNullDimension', 'metric'] -%}
-                {{ exceptions.raise_compiler_error(" 'rollup_type' '" + rollupType + "' not supported (only 'raw', 'dimension', 'metric' supported). Looking at parameter:" + tuple[0]) }}
+                {{ exceptions.raise_compiler_error(" 'rollup_type' '" + rollupType + "' not supported (only 'raw', 'dimension', 'alsoForceNullDimension', 'metric' supported). Looking at parameter:" + tuple[0]) }}
         {%- endif -%}
     {%- endfor -%}
 {%- endmacro -%}
