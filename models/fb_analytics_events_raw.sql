@@ -44,7 +44,7 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
             user_ltv.revenue, user_ltv.currency
         ) AS users_ltv
         , STRUCT<firebase_app_id STRING, stream_id STRING, advertising_id STRING>(
-            app_info.firebase_app_id, stream_id, device.advertising_id
+            LOWER(app_info.firebase_app_id), LOWER(stream_id), LOWER(device.advertising_id)
         ) as other_ids
         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(event_timestamp)') }} as event_dates
         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as install_dates
