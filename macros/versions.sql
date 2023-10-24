@@ -10,7 +10,17 @@
     {%- elif type == 'bugfix' -%}
         SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(2)] AS INT64)
     {%- elif type == 'major.minor' -%}
-        SAFE_CAST(CONCAT(SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(0)] AS INT64), ".",  SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(1)] AS INT64)) AS FLOAT64)
+        SAFE_CAST(CONCAT( {{ overbase_firebase.get_version(version, 'major') }} , ".",  COALESCE({{ overbase_firebase.get_version(version, 'minor') }}, 0) ) AS FLOAT64)
+    {%- elif type == 'major.minor.bugfix' -%}
+        {#  17 -> 17; 17.0 -> 17.0; 17.0.1 -> 17.0.1  #}
+        CASE WHEN REGEXP_CONTAINS({{ version }}, r'^[0-9.]*$') AND ARRAY_LENGTH(SPLIT({{ version }}, '.')) <= 3 THEN
+                SAFE_CAST (
+                    CONCAT(         SPLIT({{ version }}, '.')[SAFE_OFFSET(0)]
+                         , COALESCE(CONCAT('.', SPLIT({{ version }}, '.')[SAFE_OFFSET(1)]),'')
+                         , COALESCE(CONCAT('.', SPLIT({{ version }}, '.')[SAFE_OFFSET(2)]),'')
+                    ) AS STRING)
+            ELSE NULL
+        END
     {%- elif type == 'normalized' -%}
         CASE WHEN REGEXP_CONTAINS({{ version }}, r'^[0-9.]*$') AND ARRAY_LENGTH(SPLIT({{ version }}, '.')) <= 3 THEN
                 SAFE_CAST (
