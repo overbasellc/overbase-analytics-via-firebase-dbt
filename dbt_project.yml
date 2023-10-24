@@ -54,9 +54,8 @@ vars:
           # - { property_name: first_open_time, data_type: 'int'} 
           # - { property_name: poorly_set_variable, data_type: 'double'}
     # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
-          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric' }
-          # - { property_name: 'quantity2', data_type: 'int',  rollup_type: 'metric' }
-          # - { property_name: param_dimension, data_type: 'string',  rollup_type: 'dimension' }
-          # - { property_name: param_just_raw, data_type: 'int' }
-          # - { property_name: param_just_raw_explicit, data_type: 'int', rollup_type: 'raw' }
-          # - { property_name: quantity3, data_type: 'int',  rollup_type: 'metric' }
+          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric'}
+          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', field_name: 'quantity_int_sum2' }
+          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', field_name: 'quantity_avg' }
+          # - { property_name: myDimension, data_type: 'string',  rollup_type: 'alsoForceNullDimension'}
+          # - { property_name: server_sent_ts, data_type: 'string',  rollup_type: 'dimension', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', field_name: 'server_sent_ts' }

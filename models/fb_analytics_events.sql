@@ -24,7 +24,7 @@
 {%- set custom_summed_metrics = [] -%}
 {%- for tuple in overbase_firebase.get_event_parameter_tuples_for_rollup_metrics () -%}
     {# cm = custom metris #}
-    {%- set _ = custom_summed_metrics.append({"agg": "SUM(event_parameters." ~ tuple[5] ~ ") as cm_" ~ tuple[0], "alias": "cm_" ~ tuple[0]}) -%}
+    {%- set _ = custom_summed_metrics.append({"agg": tuple[4]|replace("##", "event_parameters." ~ tuple[5]) ~ " as cm_" ~ tuple[5], "alias": "cm_" ~ tuple[5]}) -%}
 {%- endfor -%}
 
 WITH data as (
