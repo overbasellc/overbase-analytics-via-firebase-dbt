@@ -40,7 +40,7 @@
         {%- set struct_field_name = parameter[5] -%}
         {%- set bq_type = parameter[6] -%}
         {%- set how_to_extract_value = parameter[7] -%}
-           {%- set _ = structValues.append("SELECT " ~ extract_transformation|replace("##", how_to_extract_value) ~ " FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ property_name + "')") -%}
+           {%- set _ = structValues.append("(SELECT " ~ extract_transformation|replace("##", how_to_extract_value) ~ " FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ property_name + "')") -%}
     {%- endfor -%}
       STRUCT<{{ structFieldNames | join(",")}}>(
           {{ structValues | join(",") }}
