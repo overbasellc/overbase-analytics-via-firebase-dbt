@@ -12,8 +12,8 @@
 SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , TIMESTAMP_MICROS(user_first_touch_timestamp) as install_ts
         , {{ overbase_firebase.calculate_age_between_timestamps("TIMESTAMP_MICROS(event_timestamp)", "TIMESTAMP_MICROS(user_first_touch_timestamp)") }} as install_age
-        , user_pseudo_id
-        , user_id
+        , LOWER(user_pseudo_id) as user_pseudo_id
+        , LOWER(user_id) as user_id
         , app_info.id as app_id
         , event_name
         , platform
