@@ -7,7 +7,7 @@
     ]%}
     {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_USER_PROPERTIES', [])) -%}
     {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
-    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters) -%}
+    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters, "analytics") -%}
     {%- do overbase_firebase.validate_parameter_tuples(all_parameters) -%}
     {{ return(all_parameters) }}
 {%- endmacro %}
@@ -27,10 +27,26 @@
     ]%}
     {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) -%}
     {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
-    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters) -%}
+    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters, "analytics") -%}
     {%- do overbase_firebase.validate_parameter_tuples(all_parameters) -%}
     {{ return(all_parameters) }}
 {%- endmacro %}
+
+{# Array of tuples [
+(property_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
+    ('ob_view_name', 'STRING', 'dimension', 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
+#}
+{% macro get_crashlytics_custom_key_tuples_all() -%}
+    {% set builtin_parameters = [ 
+    ]%}
+    {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_CRASHLYTICS_KEYS', [])) -%}
+    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
+    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters, "crashlytics") -%}
+    {%- do overbase_firebase.validate_parameter_tuples(all_parameters) -%}
+    {{ return(all_parameters) }}
+{%- endmacro %}
+
+
 
 {# e.g. [event_parameters.call_id_string (a raw only custom property), event_parameters.quantity_int (a rollup_metric custom property)] #}
 {%- macro get_mini_columns_to_ignore_when_rolling_up() -%}
@@ -155,10 +171,14 @@
     {{ return(result) }}
 {% endmacro %}
 
-{% macro add_extra_types(parameter_tuples) -%}
+{% macro add_extra_types(parameter_tuples, analyticsOrCrashlytics) -%}
     {%- set result = [] -%}
     {%- for tuple in parameter_tuples -%}
-        {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types(tuple[0], tuple[1].lower()) -%}
+        {%- if analyticsOrCrashlytics == "analytics" -%}
+            {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types(tuple[0], tuple[1].lower()) -%}
+        {%- else -%}
+            {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types_crashlytics(tuple[0], tuple[1].lower()) -%}
+        {%- endif -%}
         {%- if tuple[6] is not defined -%}
             {%- set _ = result.append((tuple[0],tuple[1], tuple[2], tuple[3], tuple[4], tuple[5], bqTypeAndHowToExtractTuple[0], bqTypeAndHowToExtractTuple[1])) -%}
         {%- else -%}
@@ -177,6 +197,18 @@
     {% set data_type_to_value = {'string' : ['STRING', 'LOWER(value.string_value)'], 'int':['INT64', 'value.int_value'], 'double':['DOUBLE', 'value.double_value']  }%}
     {%- if not data_type in  ['string','int','double']  -%}
         {{ exceptions.raise_compiler_error(" data type '" + data_type + "' not supported (only string, int & double are supported) for custom parameter named'" + parameter_name + "'" ) }}
+    {%- endif %}
+    {%- set res = data_type_to_value[data_type.lower()] %}
+    {{ return( (res[0], res[1]) ) }}
+{% endmacro %}
+
+{# returns an tuple of (TYPE of said value, how to extract value) 
+    ('STRING', 'LOWER(value.string_value)')
+#}
+{% macro get_extra_parameter_types_crashlytics(parameter_name, data_type) %}
+    {% set data_type_to_value = {'string' : ['STRING', 'LOWER(value)'] }%}
+    {%- if not data_type in  ['string']  -%}
+        {{ exceptions.raise_compiler_error(" data type '" + data_type + "' not supported (only string is supported) for custom crashlytics key named'" + parameter_name + "'" ) }}
     {%- endif %}
     {%- set res = data_type_to_value[data_type.lower()] %}
     {{ return( (res[0], res[1]) ) }}

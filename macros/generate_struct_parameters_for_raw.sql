@@ -6,6 +6,10 @@
     {{ overbase_firebase.generate_struct(overbase_firebase.get_event_parameter_tuples_all(), 'event_params') }}
 {%- endmacro%}
 
+{% macro generate_struct_for_raw_crashlytics_custom_keys() -%}
+    {{ overbase_firebase.generate_struct(overbase_firebase.get_crashlytics_custom_key_tuples_all(), 'custom_keys') }}
+{%- endmacro%}
+
 
 {% macro generate_struct(all_parameters, firebase_record_name) -%}
     {{ return(adapter.dispatch('generate_struct', 'overbase_firebase')(all_parameters, firebase_record_name) ) }}
@@ -17,7 +21,7 @@
  )  #}
 {% macro bigquery__generate_struct(all_parameters, firebase_record_name) -%}
 
-{%- set structFieldNames = [] -%}
+    {%- set structFieldNames = [] -%}
     {%- for parameter in all_parameters -%}
         {%- set property_name = parameter[0] -%}
         {%- set data_type = parameter[1] -%}
@@ -42,8 +46,12 @@
         {%- set how_to_extract_value = parameter[7] -%}
            {%- set _ = structValues.append("(SELECT " ~ extract_transformation|replace("##", how_to_extract_value) ~ " FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ property_name + "')") -%}
     {%- endfor -%}
+    {%- if structFieldNames|length > 0 -%}
       STRUCT<{{ structFieldNames | join(",")}}>(
           {{ structValues | join(",") }}
       )
+    {%- else -%}
+        STRUCT<empty STRING>('noCustomKeysDefined')
+    {%- endif -%}
 {%- endmacro %}
 

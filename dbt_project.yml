@@ -59,3 +59,6 @@ vars:
           # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', field_name: 'quantity_avg' }
           # - { property_name: myDimension, data_type: 'string',  rollup_type: 'alsoForceNullDimension'}
           # - { property_name: server_sent_ts, data_type: 'string',  rollup_type: 'dimension', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', field_name: 'server_sent_ts' }
+    # "OVERBASE:CUSTOM_CRASHLYTICS_KEYS":  # data_types : "string", "int", "float", "double"
+          # - { property_name: network_state, data_type: 'string'}
+
