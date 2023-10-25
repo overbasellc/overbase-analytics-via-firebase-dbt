@@ -5,7 +5,8 @@
       "data_type": "date",
       "granularity": "day"
      },
-    incremental_strategy = 'insert_overwrite'
+    incremental_strategy = 'insert_overwrite',
+    require_partition_filter = true
 ) }}
 
 SELECT *

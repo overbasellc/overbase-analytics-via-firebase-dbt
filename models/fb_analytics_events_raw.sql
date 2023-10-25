@@ -6,7 +6,8 @@
       "data_type": "timestamp",
       "granularity": "day"
      },
-     incremental_strategy = 'insert_overwrite'
+     incremental_strategy = 'insert_overwrite',
+     require_partition_filter = true
 ) }}
 
 SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
