@@ -27,6 +27,8 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         ) AS platform_version
         , {{ overbase_firebase.generate_struct_for_raw_user_properties() }} as user_properties
         , {{ overbase_firebase.generate_struct_for_raw_event_parameters() }} as event_parameters
+        , user_properties as user_properties_raw
+        , event_params as event_parameters_raw
         , STRUCT<city STRING , firebase_value STRING, iso_country_name STRING , iso_country_alpha_2 STRING, continent STRING, region STRING, sub_continent STRING, metro STRING>(
             geo.city, geo.country, country_codes.name, country_codes.alpha_2, geo.continent, geo.region , geo.sub_continent, geo.metro
         ) as geo
