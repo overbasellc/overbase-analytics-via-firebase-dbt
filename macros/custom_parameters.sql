@@ -18,12 +18,24 @@
     ('ob_view_name', 'STRING', 'dimension', 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
 #}
 {% macro get_event_parameter_tuples_all() -%}
+    {# ob_ui_view_shown & ob_ui_button_tapped #}
     {% set builtin_parameters = [ 
-            ("ob_view_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
-           ,("ob_view_type", "STRING", "alsoForceNullDimension", Undefined, Undefined, Undefined, Undefined)
-           ,("ob_parent_view_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
-           ,("ob_parent_view_type", "STRING", "alsoForceNullDimension", Undefined, Undefined, Undefined, Undefined)
-           ,("ob_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
+            ("view_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined) 
+           ,("view_type", "STRING", "alsoForceNullDimension", Undefined, Undefined, Undefined, Undefined)
+           ,("parent_view_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
+           ,("parent_view_type", "STRING", "alsoForceNullDimension", Undefined, Undefined, Undefined, Undefined)
+    ]%}
+    {#  ob_ui_button_tapped #}
+    {% set builtin_parameters = builtin_parameters + [
+            ("button_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined) 
+           ,("button_extra", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined) 
+    ]%}
+    {# ob_error_server_% #}
+    {% set builtin_parameters = builtin_parameters + [
+            ("domain", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)  
+           ,("path", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
+           ,("status_code", "INT", "dimension", Undefined, Undefined, Undefined, Undefined)
+           ,("extra", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
     ]%}
     {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) -%}
     {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
