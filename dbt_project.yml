@@ -46,6 +46,9 @@ vars:
     # "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_END_DATE": "2019-01-05" #optional, if you want to make
     # "OVERBASE:FIREBASE_CRASHLYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # mandatory
     # "OVERBASE:FIREBASE_CRASHLYTICS_FULL_REFRESH_END_DATE": "20219-01-05" #optional, if you want to make
+    # "OVERBASE:FIREBASE_CRASHLYTICS_ANALYTICS_EVENTS_FOR_CRASH_RATE": # optional, any custom FB Analytics events to calculate crashes against
+    #     - spend_virtual_currency
+    #     - start_trial
     # "OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS":  # optional, what built-in OB dimensions to exclude from bubbling up in the rollups (& save the row count)
     #   - geo.city
     #   - geo.metro
