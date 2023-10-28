@@ -32,7 +32,9 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , STRUCT<city STRING , firebase_value STRING, iso_country_name STRING , iso_country_alpha_2 STRING, continent STRING, region STRING, sub_continent STRING, metro STRING>(
             geo.city, geo.country, country_codes.name, country_codes.alpha_2, geo.continent, geo.region , geo.sub_continent, geo.metro
         ) as geo
-        , STRUCT<type STRING,manufacturer STRING,model_name STRING,marketing_name STRING,os_hardware_model STRING>(
+        -- for iOS it's ../Apple/iPhone 14/NULL/iPhone14,7
+        -- for Android it's ../Samsung/SM-A146U/Galaxy A14 5G/SM-A146U or ../Motorola/Moto G Power (2022)/NULL/moto g power (2022)
+        , STRUCT<type STRING,manufacturer STRING,model_name STRING,marketing_name STRING,os_model STRING>(
             device.category, device.mobile_brand_name, device.mobile_model_name, device.mobile_marketing_name, device.mobile_os_hardware_model 
         ) AS device_hardware
         , STRUCT<firebase_value STRING, iso_language_alpha_2 STRING, iso_country_alpha_2 STRING>(

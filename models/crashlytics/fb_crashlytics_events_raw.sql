@@ -19,13 +19,12 @@ SELECT    event_timestamp as event_ts
 		, COALESCE(user.id, (SELECT value FROM UNNEST(custom_keys) WHERE key = 'app_user_id')) as user_id
 		, bundle_identifier as app_id
 		, event_id
-		, variant_id
 		, CASE WHEN _TABLE_SUFFIX LIKE '%ANDROID%' THEN'ANDROID'
                WHEN _TABLE_SUFFIX LIKE '%IOS%' THEN'IOS'
-               ELSE 'UNKNOWN'
+               ELSE 'UNKNOWN' -- TODO: unit test for this
           END as platform 
-		, STRUCT<id STRING, title STRING, subtitle STRING>(
-			issue_id, issue_title, issue_subtitle
+		, STRUCT<id STRING, title STRING, subtitle STRING, variant_id STRING>(
+			issue_id, issue_title, issue_subtitle, variant_id
  		 ) as issue
 		, error_type
         , process_state
@@ -40,17 +39,17 @@ SELECT    event_timestamp as event_ts
             operating_system.display_version, operating_system.name, {{ overbase_firebase.get_version("operating_system.display_version", "major") }}, {{ overbase_firebase.get_version("operating_system.display_version", "minor") }}, {{ overbase_firebase.get_version("operating_system.display_version", "bugfix") }}, {{ overbase_firebase.get_version("operating_system.display_version", "major.minor") }}, {{ overbase_firebase.get_version("operating_system.display_version", "major.minor.bugfix") }}, {{ overbase_firebase.get_version("operating_system.display_version", "normalized") }}
         ) AS platform_version
         , operating_system.modification_state as jailbroken_state
-		, memory -- record with used & free
-		, storage -- record with used & free
-        , STRUCT<type STRING, manufacturer STRING, os_hardware_model STRING, architecture STRING>(
+        , STRUCT<type STRING, manufacturer STRING, os_model STRING, architecture STRING>(
             LOWER(operating_system.device_type), device.manufacturer, device.model, device.architecture 
         ) AS device_hardware
+        , {{ overbase_firebase.generate_struct_for_raw_crashlytics_custom_keys() }} as custom_keys
+        , custom_keys as custom_keys_raw
+        , memory -- record with used & free
+        , storage -- record with used & free
         , STRUCT<name STRING, email STRING>(
         	user.name, user.email
         ) as user
         , crashlytics_sdk_version AS crashlytics_sdk_version_string
-        , {{ overbase_firebase.generate_struct_for_raw_crashlytics_custom_keys() }} as custom_keys
-        , custom_keys as custom_keys_raw
         , logs
         , breadcrumbs
         , blame_frame
