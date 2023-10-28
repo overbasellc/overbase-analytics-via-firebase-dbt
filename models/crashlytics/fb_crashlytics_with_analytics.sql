@@ -1,8 +1,8 @@
 {{ config(
     materialized='incremental',
     partition_by={
-      "field": "event_ts",
-      "data_type": "timestamp",
+      "field": "event_date",
+      "data_type": "date",
       "granularity": "day"
      },
      incremental_strategy = 'insert_overwrite',
