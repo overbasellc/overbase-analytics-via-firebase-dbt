@@ -29,8 +29,12 @@
 {%- endfor -%}
 
 WITH data as (
-    SELECT   DATE(event_ts) as event_date
-            , IF(install_age = 0, 'Age 0', 'Age > 0') as install_age_group
+    SELECT    DATE(event_ts) as event_date
+            , CASE WHEN install_age  =  0 THEN 'Age 0'
+                   WHEN install_age <=  6 THEN 'Age 1-6'
+                   WHEN install_age <= 30 THEN 'Age 7-30'
+                   ELSE 'Age 31+'
+              END AS install_age_group
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
