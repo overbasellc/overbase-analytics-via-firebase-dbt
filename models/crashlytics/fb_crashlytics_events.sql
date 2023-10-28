@@ -19,7 +19,7 @@
 {%- set tmp_res = overbase_firebase.get_filtered_columns_for_table("fb_crashlytics_events_raw", columnNamesEventDimensions, miniColumnsToIgnoreInGroupBy) -%}
 {%- set columnsForEventDimensions = tmp_res[0] -%}
 {%- set eventDimensionsUnnestedCount = tmp_res[1]  -%}
-
+ 
 WITH data as (
     SELECT   DATE(event_ts) as event_date
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") }}
@@ -27,12 +27,10 @@ WITH data as (
             , COUNT(DISTINCT(crashlytics_user_pseudo_id)) as users
     FROM {{ ref("fb_crashlytics_events_raw") }}
     WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
-    GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
+    GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT event_date
-        , install_age_group
         , {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
         , cnt
         , users
-        {{ ", " if custom_summed_metrics|length > 0 else "" }}  {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
 FROM data
