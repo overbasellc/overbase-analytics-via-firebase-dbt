@@ -35,7 +35,7 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         -- for iOS it's ../Apple/iPhone 14/NULL/iPhone14,7
         -- for Android it's ../Samsung/SM-A146U/Galaxy A14 5G/SM-A146U or ../Motorola/Moto G Power (2022)/NULL/moto g power (2022)
         , STRUCT<type STRING,manufacturer STRING,model_name STRING,marketing_name STRING,os_model STRING>(
-            device.category, device.mobile_brand_name, device.mobile_model_name, device.mobile_marketing_name, device.mobile_os_hardware_model 
+            device.category, LOWER(device.mobile_brand_name), device.mobile_model_name, device.mobile_marketing_name, LOWER(device.mobile_os_hardware_model) 
         ) AS device_hardware
         , STRUCT<firebase_value STRING, iso_language_alpha_2 STRING, iso_country_alpha_2 STRING>(
             device.language, language_codes.alpha_2, language_region_codes.alpha_2

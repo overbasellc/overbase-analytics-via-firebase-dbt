@@ -40,7 +40,7 @@ SELECT    event_timestamp as event_ts
         ) AS platform_version
         , operating_system.modification_state as jailbroken_state
         , STRUCT<type STRING, manufacturer STRING, os_model STRING, architecture STRING>(
-            LOWER(operating_system.device_type), device.manufacturer, device.model, device.architecture 
+            LOWER(operating_system.device_type), LOWER(device.manufacturer), LOWER(device.model), device.architecture 
         ) AS device_hardware
         , {{ overbase_firebase.generate_struct_for_raw_crashlytics_custom_keys() }} as custom_keys
         , custom_keys as custom_keys_raw
