@@ -27,11 +27,12 @@
     {# cm = custom metris #}
     {%- set _ = custom_summed_metrics.append({"agg": tuple[4]|replace("##", "event_parameters." ~ tuple[5]) ~ " as cm_" ~ tuple[5], "alias": "cm_" ~ tuple[5]}) -%}
 {%- endfor -%}
+{%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
 
-WITH data as (
-    SELECT    DATE(event_ts) as event_date
+WITH nillableData as (
+      SELECT   DATE(event_ts) as event_date
             , {{ overbase_firebase.install_age_group("install_age") }} AS install_age_group
-            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") }}
+            , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, miniColumnsToAlsoNil, "", "") }}
             , COUNT(1) as cnt
             , COUNT(DISTINCT(user_pseudo_id)) as users
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
@@ -46,4 +47,4 @@ SELECT event_date
         , cnt
         , users
         {{ ", " if custom_summed_metrics|length > 0 else "" }}  {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
-FROM data
+FROM nillableData
