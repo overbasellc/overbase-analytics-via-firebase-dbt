@@ -19,11 +19,14 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , event_name
         , platform
         , app_info.install_source as appstore
-        , STRUCT<firebase_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64>(
-            app_info.version, {{ overbase_firebase.get_version("app_info.version", "major") }}, {{ overbase_firebase.get_version("app_info.version", "minor") }}, {{ overbase_firebase.get_version("app_info.version", "bugfix") }}, {{ overbase_firebase.get_version("app_info.version", "major.minor") }}, {{ overbase_firebase.get_version("app_info.version", "major.minor.bugfix") }}, {{ overbase_firebase.get_version("app_info.version", "normalized") }}
+        , STRUCT<firebase_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64, join_value STRING>(
+            {%- set v = "app_info.version" -%}
+            {{ v }}, {{ overbase_firebase.get_version(v, "major") }}, {{ overbase_firebase.get_version(v, "minor") }}, {{ overbase_firebase.get_version(v, "bugfix") }}, {{ overbase_firebase.get_version(v, "major.minor") }}, {{ overbase_firebase.get_version(v, "major.minor.bugfix") }}, {{ overbase_firebase.get_version(v, "normalized") }}, COALESCE(CAST({{ overbase_firebase.get_version(v, "normalized") }} AS STRING), {{ v }} )
         ) AS app_version
-        , STRUCT<firebase_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64>(
-            device.operating_system_version, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "major") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "minor") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "bugfix") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "major.minor") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "major.minor.bugfix") }}, {{ overbase_firebase.get_version("REPLACE(device.operating_system_version, device.operating_system ||' ','')", "normalized") }}
+        # join_value: COALESCE(normalized, "almost" firebase_value). FB Analytics's firebase_value is 'iOS 16.7.1', but Crashlytics' is just '16.7.1', so use just '16.7.1'
+        , STRUCT<firebase_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64, join_value STRING>(
+            {%- set v = "REPLACE(device.operating_system_version, device.operating_system ||' ','')" -%}
+            device.operating_system_version, {{ overbase_firebase.get_version(v, "major") }}, {{ overbase_firebase.get_version(v, "minor") }}, {{ overbase_firebase.get_version(v, "bugfix") }}, {{ overbase_firebase.get_version(v, "major.minor") }}, {{ overbase_firebase.get_version(v, "major.minor.bugfix") }}, {{ overbase_firebase.get_version(v, "normalized") }}, COALESCE(CAST( {{ overbase_firebase.get_version(v, "normalized") }} AS STRING), {{ v }} )
         ) AS platform_version
         , {{ overbase_firebase.generate_struct_for_raw_user_properties() }} as user_properties
         , {{ overbase_firebase.generate_struct_for_raw_event_parameters() }} as event_parameters

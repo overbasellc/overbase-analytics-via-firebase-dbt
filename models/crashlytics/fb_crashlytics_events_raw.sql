@@ -19,6 +19,7 @@ SELECT    event_timestamp as event_ts
 		, COALESCE(user.id, (SELECT value FROM UNNEST(custom_keys) WHERE key = 'app_user_id')) as user_id
 		, bundle_identifier as app_id
 		, event_id
+         -- the platform we get in operating_system.type is not populated for Android, only for iOS. So rely on _TABLE_SUFFIX instead
 		, CASE WHEN _TABLE_SUFFIX LIKE '%ANDROID%' THEN'ANDROID'
                WHEN _TABLE_SUFFIX LIKE '%IOS%' THEN'IOS'
                ELSE 'UNKNOWN' -- TODO: unit test for this
@@ -31,12 +32,13 @@ SELECT    event_timestamp as event_ts
         , STRUCT<app STRING, device STRING>(
         	app_orientation, device_orientation
           ) as orientation
-		-- the platform we get in operating_system.type is not populated for Android, only for iOS. So rely on _TABLE_SUFFIX instead
-        , STRUCT<firebase_value STRING, build_no STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64>(
-            application.display_version, application.build_version, {{ overbase_firebase.get_version("application.display_version", "major") }}, {{ overbase_firebase.get_version("application.display_version", "minor") }}, {{ overbase_firebase.get_version("application.display_version", "bugfix") }}, {{ overbase_firebase.get_version("application.display_version", "major.minor") }}, {{ overbase_firebase.get_version("application.display_version", "major.minor.bugfix") }}, {{ overbase_firebase.get_version("application.display_version", "normalized") }}
+        , STRUCT<firebase_value STRING, build_no STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64, join_value STRING>(
+            {%- set v = "application.display_version" -%}
+            {{ v }}, application.build_version, {{ overbase_firebase.get_version(v, "major") }}, {{ overbase_firebase.get_version(v, "minor") }}, {{ overbase_firebase.get_version(v, "bugfix") }}, {{ overbase_firebase.get_version(v, "major.minor") }}, {{ overbase_firebase.get_version(v, "major.minor.bugfix") }}, {{ overbase_firebase.get_version(v, "normalized") }}, COALESCE(CAST({{ overbase_firebase.get_version(v, "normalized") }} AS STRING), {{ v }} )
         ) AS app_version
-        , STRUCT<firebase_value STRING, name STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64>(
-            operating_system.display_version, operating_system.name, {{ overbase_firebase.get_version("operating_system.display_version", "major") }}, {{ overbase_firebase.get_version("operating_system.display_version", "minor") }}, {{ overbase_firebase.get_version("operating_system.display_version", "bugfix") }}, {{ overbase_firebase.get_version("operating_system.display_version", "major.minor") }}, {{ overbase_firebase.get_version("operating_system.display_version", "major.minor.bugfix") }}, {{ overbase_firebase.get_version("operating_system.display_version", "normalized") }}
+        , STRUCT<firebase_value STRING, name STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64, join_value STRING>(
+            {%- set v = "operating_system.display_version" -%}
+            {{ v }}, operating_system.name, {{ overbase_firebase.get_version(v, "major") }}, {{ overbase_firebase.get_version(v, "minor") }}, {{ overbase_firebase.get_version(v, "bugfix") }}, {{ overbase_firebase.get_version(v, "major.minor") }}, {{ overbase_firebase.get_version(v, "major.minor.bugfix") }}, {{ overbase_firebase.get_version(v, "normalized") }}, COALESCE(CAST( {{ overbase_firebase.get_version(v, "normalized") }} AS STRING), {{ v }} )
         ) AS platform_version
         , operating_system.modification_state as jailbroken_state
         , STRUCT<type STRING, manufacturer STRING, os_model STRING, architecture STRING>(
