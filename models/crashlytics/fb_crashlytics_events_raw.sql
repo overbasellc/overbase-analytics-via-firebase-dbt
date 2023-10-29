@@ -46,11 +46,9 @@ SELECT    event_timestamp as event_ts
         ) AS device_hardware
         , {{ overbase_firebase.generate_struct_for_raw_crashlytics_custom_keys() }} as custom_keys
         , custom_keys as custom_keys_raw
-        , memory -- record with used & free
-        , storage -- record with used & free
-        , STRUCT<name STRING, email STRING>(
-        	user.name, user.email
-        ) as user
+        , STRUCT<used_bytes INT64, free_bytes INT64>(memory.used, memory.free) as memory
+        , STRUCT<used_bytes INT64, free_bytes INT64>(storage.used, storage.free) as storage
+        , STRUCT<name STRING, email STRING>(user.name, user.email) as user
         , crashlytics_sdk_version AS crashlytics_sdk_version_string
         , logs
         , breadcrumbs

@@ -22,6 +22,9 @@ models:
     # Applies to all files under models/example/
     materialized: table
     schema: overbase
+    +persist_docs:
+      relation: true
+      columns: true
 
 seeds:
   overbase_firebase:
