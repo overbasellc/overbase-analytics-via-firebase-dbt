@@ -7,7 +7,8 @@
       "granularity": "day"
      },
      incremental_strategy = 'insert_overwrite',
-     require_partition_filter = true
+     require_partition_filter = true,
+     cluster_by = ["event_name", "platform", "app_id"]
 ) }}
 
 -- https://support.google.com/firebase/answer/7029846

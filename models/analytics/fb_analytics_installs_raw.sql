@@ -6,7 +6,8 @@
       "granularity": "day"
      },
     incremental_strategy = 'insert_overwrite',
-    require_partition_filter = true
+    require_partition_filter = true,
+    cluster_by = ["platform", "app_id"],
 ) }}
     -- incremental_strategy='insert_overwrite',
     -- require_partition_filter = false

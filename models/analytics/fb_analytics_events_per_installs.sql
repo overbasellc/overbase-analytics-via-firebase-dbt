@@ -1,5 +1,6 @@
 {{ config(
-    materialized='ephemeral'
+    materialized='ephemeral',
+    enabled=false
 ) }}
 
 SELECT 1 as dont_care

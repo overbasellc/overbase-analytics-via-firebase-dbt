@@ -6,7 +6,9 @@
       "granularity": "day"
      },
     incremental_strategy = 'insert_overwrite',
-    require_partition_filter = true
+    require_partition_filter = true,
+    enabled = false,
+    cluster_by = ["event_name", "platform", "app_id"]
 ) }}
 -- TODO: adi
     -- incremental_strategy='insert_overwrite',
