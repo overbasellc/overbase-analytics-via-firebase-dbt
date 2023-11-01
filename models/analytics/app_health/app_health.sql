@@ -30,55 +30,70 @@
 {%- endfor -%}
 
 WITH analytics AS (
-    SELECT  {# ignore device_hardware.model_name & marketing_name in Analytics as they don't have a Crashlytics correspondent #}
-            {%- set miniColumnsToIgnoreInGroupBy = ["device_hardware.model_name", "device_hardware.marketing_name"] %}
-            {%- set tmp_res = overbase_firebase.get_filtered_columns_for_table("fb_analytics_events", ["event_date", "platform", "app_version", "platform_version", "device_hardware"], miniColumnsToIgnoreInGroupBy)-%}
-            {%- set columnsForEventDimensions = tmp_res[0] -%}
-            {%- set eventDimensionsUnnestedCount = tmp_res[1]  -%}
-            {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") }}
+    SELECT  event_date
+          , platform 
+          , app_version.join_value as app_version_join_value
+          , platform_version.join_value as platform_version_join_value
+          , device_hardware.type AS device_hardware_type
+          , device_hardware.manufacturer AS device_hardware_manufacturer
+          , device_hardware.os_model AS device_hardware_os_model
           , {{ custom_summed_metrics |map(attribute='agg')|join("\n        ,") }}
-
-
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     AND event_name IN {{ tojson(allHealthMeasures | map(attribute="event_name") | list).replace("[", "(").replace("]", ")") }}
-    GROUP BY {% for n in range(1, eventDimensionsUnnestedCount + 1) -%} {{ "," if not loop.first else "" }}{{ n }} {%- endfor %}
+    GROUP BY 1,2,3,4,5,6,7
 )
 , crashlytics AS (
-      SELECT  {# ignore app_version.build_no & platform.name in Crashlytics as they don't have an Analytics correspondent #}
-            {%- set miniColumnsToIgnoreInGroupBy = ["app_version.build_no", "platform_version.name", "device_hardware.architecture"] %}
-            {%- set tmp_res = overbase_firebase.get_filtered_columns_for_table("fb_crashlytics_events", ["event_date", "platform", "app_version", "platform_version", "device_hardware"], miniColumnsToIgnoreInGroupBy)-%}
-            {%- set columnsForEventDimensions = tmp_res[0] -%}
-            {%- set eventDimensionsUnnestedCount = tmp_res[1]  -%}
-            {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") }}            
-          , SUM(cnt) as cnt
-          , SUM(users) as users
+      SELECT  event_date
+            , platform 
+            , app_version.join_value as app_version_join_value
+            , platform_version.join_value as platform_version_join_value
+            , device_hardware.type AS device_hardware_type
+            , device_hardware.manufacturer AS device_hardware_manufacturer
+            , device_hardware.os_model AS device_hardware_os_model
+            , SUM(cnt) as cnt
+            , SUM(users) as users
   FROM {{ ref("fb_crashlytics_events") }}
   WHERE {{ overbase_firebase.crashlyticsDateFilterFor('event_date') }}
-  GROUP BY {% for n in range(1, eventDimensionsUnnestedCount + 1) -%} {{ "," if not loop.first else "" }}{{ n }} {%- endfor %}
+  GROUP BY 1,2,3,4,5,6,7
+
 )
 , joined_unpacked AS (
-    SELECT 
-          {%- set unpackedColumnNamesWeGroupedOver = overbase_firebase.unpack_columns_into_minicolumns_array(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") | map(attribute=1) | list %} 
-          {%- set analyticsAliases = overbase_firebase.list_map_and_add_prefix(unpackedColumnNamesWeGroupedOver, "analytics.") -%}
-          {%- set crashlyticsAliases = overbase_firebase.list_map_and_add_prefix(unpackedColumnNamesWeGroupedOver, "crashlytics.") -%}
-          {%- for joinTuple in zip(unpackedColumnNamesWeGroupedOver, analyticsAliases,crashlyticsAliases) %}
-              {{ " ," if not loop.first else "" }} COALESCE({{ joinTuple[1] }} ,  {{ joinTuple[2] }} ) AS {{ joinTuple[0] }}
-          {%- endfor %}
+    SELECT  COALESCE(analytics.event_date ,  crashlytics.event_date ) AS event_date
+          , COALESCE(analytics.platform ,  crashlytics.platform ) AS platform
+          , COALESCE(analytics.app_version_join_value ,  crashlytics.app_version_join_value ) AS app_version_join_value
+          , COALESCE(analytics.platform_version_join_value ,  crashlytics.platform_version_join_value ) AS platform_version_join_value
+          , COALESCE(analytics.device_hardware_type ,  crashlytics.device_hardware_type ) AS device_hardware_type
+          , COALESCE(analytics.device_hardware_manufacturer ,  crashlytics.device_hardware_manufacturer ) AS device_hardware_manufacturer
+          , COALESCE(analytics.device_hardware_os_model ,  crashlytics.device_hardware_os_model ) AS device_hardware_os_model
           , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_metrics | map(attribute='alias'), "analytics.") | join("\n          ,") }}
           , crashlytics.cnt as crashlytics_cnt
           , crashlytics.users as crashlytics_users
     FROM crashlytics
     FULL OUTER JOIN analytics ON 
-    {%- set unpackedColumnNamesWeGroupedOver = overbase_firebase.unpack_columns_into_minicolumns_array(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, [], "", "") | map(attribute=1) | list %} 
-    {%- set analyticsAliases = overbase_firebase.list_map_and_add_prefix(unpackedColumnNamesWeGroupedOver, "analytics.") -%}
-    {%- set crashlyticsAliases = overbase_firebase.list_map_and_add_prefix(unpackedColumnNamesWeGroupedOver, "crashlytics.") -%}
-    {%- for joinTuple in zip(analyticsAliases,crashlyticsAliases) %}
-      {{ " AND " if not loop.first else "" }} {{ joinTuple[0] ~ " = " ~ joinTuple[1] }}
-    {%- endfor %}
+            analytics.event_date = crashlytics.event_date
+       AND  analytics.platform = crashlytics.platform
+       AND  analytics.app_version_join_value = crashlytics.app_version_join_value
+       AND  analytics.platform_version_join_value = crashlytics.platform_version_join_value
+       AND  analytics.device_hardware_type = crashlytics.device_hardware_type
+       AND  analytics.device_hardware_manufacturer = crashlytics.device_hardware_manufacturer
+       AND  analytics.device_hardware_os_model = crashlytics.device_hardware_os_model
 )
-SELECT  {{ overbase_firebase.pack_minicolumns_into_structs_for_select(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, "", "") }}
-          , crashlytics_cnt
-          , crashlytics_users
-          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_metrics | map(attribute='alias')) | join("\n          ,") }}
+SELECT  event_date
+      , platform 
+      , {{ get_version_record_from_normalized('app_version_join_value') }} AS app_version
+      , {{ get_version_record_from_normalized('platform_version_join_value') }} AS platform_version
+      , STRUCT<type STRING, manufacturer STRING, os_model STRING>(
+         device_hardware_type, device_hardware_manufacturer, device_hardware_os_model
+      ) as device_hardware
+     , crashlytics_cnt
+     , crashlytics_users
+     , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_metrics | map(attribute='alias')) | join("\n          ,") }}
 FROM joined_unpacked
+
+-- For debugging
+-- SELECT    SUM(IF(user_engagement_cnt IS NOT NULL AND crashlytics_cnt IS NOT NULL, 1, 0)) as both_not_null
+--         , SUM(IF(user_engagement_cnt IS     NULL AND crashlytics_cnt IS NOT NULL, 1, 0)) as just_in_crashlytics
+--         , SUM(IF(user_engagement_cnt IS NOT NULL AND crashlytics_cnt IS     NULL, 1, 0)) as just_in_analytics
+--         , SUM(1) as total_cnt
+-- FROM joined_unpacked

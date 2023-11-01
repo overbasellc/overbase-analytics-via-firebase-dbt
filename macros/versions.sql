@@ -35,3 +35,20 @@
     {%- endif -%}
 {%- endmacro %}
 
+{# Returns major, minor, bugfix, major.minor, majoir.minor.bugfix, normalized #}
+{%- macro get_version_record_from_normalized(normalizedAsString) -%}
+  CASE WHEN SAFE_CAST({{ normalizedAsString }} AS INT64) IS NOT NULL AND LENGTH({{ normalizedAsString }}) >= 13
+       THEN STRUCT<major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64>(
+          SAFE_CAST(SUBSTR({{ normalizedAsString }}, 0, LENGTH({{ normalizedAsString }}) - 12) AS INT64), 
+          SAFE_CAST(SUBSTR({{ normalizedAsString }}, -12, 6) AS INT64),
+          SAFE_CAST(SUBSTR({{ normalizedAsString }}, -6, 6) AS INT64),
+          SAFE_CAST(CONCAT(SUBSTR({{ normalizedAsString }}, -12, 6), ".", SUBSTR({{ normalizedAsString }}, -6, 6)) AS FLOAT64),
+          CONCAT(SUBSTR({{ normalizedAsString }}, 0, LENGTH({{ normalizedAsString }}) - 12), ".", SUBSTR({{ normalizedAsString }}, -12, 6), ".", SUBSTR({{ normalizedAsString }}, -6, 6)),
+          SAFE_CAST({{ normalizedAsString }} AS INT64)
+   )
+  ELSE STRUCT<major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64>(
+          NULL, NULL, NULL, NULL, NULL, NULL
+  )
+  END
+
+{%- endmacro -%}
