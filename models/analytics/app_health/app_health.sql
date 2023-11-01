@@ -102,8 +102,6 @@ SELECT  event_date
       , STRUCT<type STRING, manufacturer STRING, os_model STRING>(
          device_hardware_type, device_hardware_manufacturer, device_hardware_os_model
       ) as device_hardware
-     , crashlytics_cnt
-     , crashlytics_users
      , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias')) | join("\n          ,") }}
 FROM joined_unpacked
 
