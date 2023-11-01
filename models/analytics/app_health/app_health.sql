@@ -39,7 +39,7 @@ WITH analytics AS (
           , device_hardware.type AS device_hardware_type
           , device_hardware.manufacturer AS device_hardware_manufacturer
           , device_hardware.os_model AS device_hardware_os_model
-          , {{ custom_summed_measures |map(attribute='agg')|join("\n        ,") }}
+          , {{ custom_summed_measures |map(attribute='agg')|join("\n          , ") }}
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     AND event_name IN {{ tojson(allHealthMeasures | map(attribute="event_name") | list).replace("[", "(").replace("]", ")") }}
@@ -68,7 +68,7 @@ WITH analytics AS (
           , COALESCE(analytics.device_hardware_type ,  crashlytics.device_hardware_type ) AS device_hardware_type
           , COALESCE(analytics.device_hardware_manufacturer ,  crashlytics.device_hardware_manufacturer ) AS device_hardware_manufacturer
           , COALESCE(analytics.device_hardware_os_model ,  crashlytics.device_hardware_os_model ) AS device_hardware_os_model
-          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias'), "analytics.") | join("\n          ,") }}
+          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias'), "analytics.") | join("\n          , ") }}
           , crashlytics.cnt as crashlytics_cnt
           , crashlytics.users as crashlytics_users
     FROM crashlytics
