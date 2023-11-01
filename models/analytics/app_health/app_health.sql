@@ -9,10 +9,12 @@
      require_partition_filter = true
 ) }}
 
-{%- set custom_summed_metrics = [] -%}
+{%- set custom_summed_measures = [] -%}
 {%- set builtinMeasures = [
-  {"name":"user_engagement", "agg": "SUM(##)", "event_name": "user_engagement"},
-  {"name":"ob_app_foreground", "agg": "SUM(##)", "event_name": "ob_app_foreground"}
+  {"name":"user_engagement"  , "agg": "SUM(##)", "event_name": "user_engagement"},
+  {"name":"ob_app_foreground", "agg": "SUM(##)", "event_name": "ob_app_foreground"},
+  {"name":"app_update"   , "agg": "SUM(##)", "event_name": "app_update",  "mini_measures": ["cnt", "users"]},
+  {"name":"ob_app_update", "agg": "SUM(##)", "event_name": "ob_app_update",  "mini_measures": ["cnt", "users"]},
 ] %}
 {%- set allHealthMeasures = builtinMeasures + var("OVERBASE:CUSTOM_APP_HEALTH_MEASURES", []) %}
 {%- for customHealthMeasure in allHealthMeasures -%}
@@ -20,12 +22,12 @@
     {%- set user_column_name = customHealthMeasure['name'] %}
     {%- set additional_filter = customHealthMeasure["additional_filter"] if customHealthMeasure["additional_filter"] is defined else "True" -%}
     {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
-
-    {%- for cnt in ["cnt", "users"] -%}
+    {%- set mini_measures = customHealthMeasure["mini_measures"] if customHealthMeasure["mini_measures"] is defined else ["cnt", "users"] -%}
+    {%- for cnt in mini_measures -%}
       {# do all for combinations for coc, cou (count over users), uou, uoc #}
         {%- set column_name = "" ~ user_column_name ~ "_" ~ cnt %}
         {%- set agg  = customHealthMeasure['agg'] | replace("##", "IF(" ~ filter    ~ ", " ~ cnt ~", 0)") -%}
-        {%- set _ = custom_summed_metrics.append({"agg": agg ~ " as " ~ column_name, "alias": column_name }) -%}
+        {%- set _ = custom_summed_measures.append({"agg": agg ~ " as " ~ column_name, "alias": column_name }) -%}
     {%- endfor -%}
 {%- endfor -%}
 
@@ -37,7 +39,7 @@ WITH analytics AS (
           , device_hardware.type AS device_hardware_type
           , device_hardware.manufacturer AS device_hardware_manufacturer
           , device_hardware.os_model AS device_hardware_os_model
-          , {{ custom_summed_metrics |map(attribute='agg')|join("\n        ,") }}
+          , {{ custom_summed_measures |map(attribute='agg')|join("\n        ,") }}
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     AND event_name IN {{ tojson(allHealthMeasures | map(attribute="event_name") | list).replace("[", "(").replace("]", ")") }}
@@ -66,7 +68,7 @@ WITH analytics AS (
           , COALESCE(analytics.device_hardware_type ,  crashlytics.device_hardware_type ) AS device_hardware_type
           , COALESCE(analytics.device_hardware_manufacturer ,  crashlytics.device_hardware_manufacturer ) AS device_hardware_manufacturer
           , COALESCE(analytics.device_hardware_os_model ,  crashlytics.device_hardware_os_model ) AS device_hardware_os_model
-          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_metrics | map(attribute='alias'), "analytics.") | join("\n          ,") }}
+          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias'), "analytics.") | join("\n          ,") }}
           , crashlytics.cnt as crashlytics_cnt
           , crashlytics.users as crashlytics_users
     FROM crashlytics
@@ -88,7 +90,7 @@ SELECT  event_date
       ) as device_hardware
      , crashlytics_cnt
      , crashlytics_users
-     , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_metrics | map(attribute='alias')) | join("\n          ,") }}
+     , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias')) | join("\n          ,") }}
 FROM joined_unpacked
 
 -- For debugging

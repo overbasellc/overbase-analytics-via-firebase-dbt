@@ -1,5 +1,5 @@
 name: 'overbase_firebase'
-version: '0.4.0'
+version: '0.4.1'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
@@ -68,11 +68,13 @@ vars:
     #         - name: signup_step_1
     #           agg: SUM(##)
     #           event_name: ui_view_shown
+    #           # mini_measures: ["cnt", "users"] # optional, the default it aggregates over if unspecified
     #           additional_filter  : event_parameters.view_name_string = 'signup step 1' AND event_parameters.view_type_string = 'ob-forced-null'
-    #         - name: signup_step_5
+    #         - name: svc_inbound_duration
     #           agg: SUM(##)
-    #           event_name: ui_view_shown
-    #           additional_filter  : event_parameters.view_name_string = 'signup step 5' AND event_parameters.view_type_string = 'ob-forced-null'
+    #           event_name: spend_virtual_currency
+    #           mini_measures: ["cm_quantity_int"]
+    #           additional_filter  : event_parameters.direction_string = 'inbound'
     # "OVERBASE:CUSTOM_APP_HEALTH_METRICS": # TODO later on, forward to the BI tool as the semantic layer
           # NOT IMPLEMENTED ATM
           # -  name: signup_ratio 
