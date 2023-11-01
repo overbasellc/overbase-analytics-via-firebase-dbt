@@ -1,5 +1,5 @@
 name: 'overbase_firebase'
-version: '0.4.1'
+version: '0.4.3'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
@@ -65,7 +65,8 @@ vars:
     # "OVERBASE:CUSTOM_CRASHLYTICS_KEYS":  # data_types : "string", "int", "float", "double"
           # - { property_name: network_state, data_type: 'string'}
     # "OVERBASE:CUSTOM_APP_HEALTH_MEASURES":  # optional, any custom measures that you want rolled up in the app_health model
-    #         - name: signup_step_1
+    #         - name: signup_step_1 #no spaces, needs to be a proper column name
+    #           model: analytics # optional. It can either be analytics or crashlytics. Default is analytics
     #           agg: SUM(##)
     #           event_name: ui_view_shown
     #           # mini_measures: ["cnt", "users"] # optional, the default it aggregates over if unspecified
@@ -75,6 +76,10 @@ vars:
     #           event_name: spend_virtual_currency
     #           mini_measures: ["cm_quantity_int"]
     #           additional_filter  : event_parameters.direction_string = 'inbound'
+    #         - name: fatal_crashes_during_calls
+    #           model: crashlytics
+    #           agg: SUM(##)
+    #           additional_filter: error_type = 'FATAL' AND custom_keys.call_state = 'duringCall'
     # "OVERBASE:CUSTOM_APP_HEALTH_METRICS": # TODO later on, forward to the BI tool as the semantic layer
           # NOT IMPLEMENTED ATM
           # -  name: signup_ratio 

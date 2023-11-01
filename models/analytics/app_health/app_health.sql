@@ -10,24 +10,40 @@
 ) }}
 
 {%- set custom_summed_measures = [] -%}
+{# mini_measures": ["cnt", "users"] are implicit in all of them, as the default #}
 {%- set builtinMeasures = [
-  {"name":"user_engagement"  , "agg": "SUM(##)", "event_name": "user_engagement"},
-  {"name":"ob_app_foreground", "agg": "SUM(##)", "event_name": "ob_app_foreground"},
-  {"name":"app_update"   , "agg": "SUM(##)", "event_name": "app_update",  "mini_measures": ["cnt", "users"]},
-  {"name":"ob_app_update", "agg": "SUM(##)", "event_name": "ob_app_update",  "mini_measures": ["cnt", "users"]},
+  {"model": "analytics", "name":"user_engagement"  , "agg": "SUM(##)", "event_name": "user_engagement"},
+  {"model": "analytics", "name":"ob_app_foreground", "agg": "SUM(##)", "event_name": "ob_app_foreground"},
+  {"model": "analytics", "name":"app_update"   , "agg": "SUM(##)", "event_name": "app_update"},
+  {"model": "analytics", "name":"ob_app_update", "agg": "SUM(##)", "event_name": "ob_app_update"},
+
+  {"model": "crashlytics", "name":"all_errors", "agg": "SUM(##)"},
+  {"model": "crashlytics", "name":"fatal_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL'"},
+  {"model": "crashlytics", "name":"fatal_foregrond_crashes" , "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'FOREGROUND'"},
+  {"model": "crashlytics", "name":"fatal_background_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'BACKGROUND' "}
 ] %}
 {%- set allHealthMeasures = builtinMeasures + var("OVERBASE:CUSTOM_APP_HEALTH_MEASURES", []) %}
 {%- for customHealthMeasure in allHealthMeasures -%}
-    {# TODO check if name repescts an alias name. No spaces etc. #}
+    {%- set model = customHealthMeasure['model'] if customHealthMeasure['model'] is defined else "analytics" %}
+    {%- if model not in ["analytics", "crashlytics"]-%}
+        {{ exceptions.raise_compiler_error("Need to specify a valid model for each custom app health measure. Either 'analytics' or 'crashlytics'. Found " + model) }}
+    {%- endif -%}
     {%- set user_column_name = customHealthMeasure['name'] %}
+    {%- if " " in user_column_name -%}
+        {{ exceptions.raise_compiler_error("Can't have spaces inside the name of a custom app health measure. It needs to be a valid column name." ) }}
+    {%- endif -%}
     {%- set additional_filter = customHealthMeasure["additional_filter"] if customHealthMeasure["additional_filter"] is defined else "True" -%}
-    {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
+    {%- if customHealthMeasure["event_name"] is defined -%}
+      {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
+    {%- else -%}
+      {%- set filter = additional_filter -%}
+    {%- endif -%}
     {%- set mini_measures = customHealthMeasure["mini_measures"] if customHealthMeasure["mini_measures"] is defined else ["cnt", "users"] -%}
     {%- for cnt in mini_measures -%}
       {# do all for combinations for coc, cou (count over users), uou, uoc #}
         {%- set column_name = "" ~ user_column_name ~ "_" ~ cnt %}
         {%- set agg  = customHealthMeasure['agg'] | replace("##", "IF(" ~ filter    ~ ", " ~ cnt ~", 0)") -%}
-        {%- set _ = custom_summed_measures.append({"agg": agg ~ " as " ~ column_name, "alias": column_name }) -%}
+        {%- set _ = custom_summed_measures.append({"model": model, "agg": agg ~ " as " ~ column_name, "alias": column_name }) -%}
     {%- endfor -%}
 {%- endfor -%}
 
@@ -39,10 +55,10 @@ WITH analytics AS (
           , device_hardware.type AS device_hardware_type
           , device_hardware.manufacturer AS device_hardware_manufacturer
           , device_hardware.os_model AS device_hardware_os_model
-          , {{ custom_summed_measures |map(attribute='agg')|join("\n          , ") }}
+          , {{ custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='agg')|join("\n          , ") }}
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-    AND event_name IN {{ tojson(allHealthMeasures | map(attribute="event_name") | list).replace("[", "(").replace("]", ")") }}
+    AND event_name IN {{ tojson(allHealthMeasures | selectattr("model", "equalto", "analytics") | map(attribute="event_name") | list).replace("[", "(").replace("]", ")") }}
     GROUP BY 1,2,3,4,5,6,7
 )
 , crashlytics AS (
@@ -53,8 +69,7 @@ WITH analytics AS (
             , device_hardware.type AS device_hardware_type
             , device_hardware.manufacturer AS device_hardware_manufacturer
             , device_hardware.os_model AS device_hardware_os_model
-            , SUM(cnt) as cnt
-            , SUM(users) as users
+            , {{ custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='agg')|join("\n          , ") }}
   FROM {{ ref("fb_crashlytics_events") }}
   WHERE {{ overbase_firebase.crashlyticsDateFilterFor('event_date') }}
   GROUP BY 1,2,3,4,5,6,7
@@ -68,9 +83,8 @@ WITH analytics AS (
           , COALESCE(analytics.device_hardware_type ,  crashlytics.device_hardware_type ) AS device_hardware_type
           , COALESCE(analytics.device_hardware_manufacturer ,  crashlytics.device_hardware_manufacturer ) AS device_hardware_manufacturer
           , COALESCE(analytics.device_hardware_os_model ,  crashlytics.device_hardware_os_model ) AS device_hardware_os_model
-          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias'), "analytics.") | join("\n          , ") }}
-          , crashlytics.cnt as crashlytics_cnt
-          , crashlytics.users as crashlytics_users
+          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='alias'), "analytics.") | join("\n          , ") }}
+          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='alias'), "crashlytics.") | join("\n          , ") }}
     FROM crashlytics
     FULL OUTER JOIN analytics ON 
             analytics.event_date = crashlytics.event_date
