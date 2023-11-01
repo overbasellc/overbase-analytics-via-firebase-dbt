@@ -83,8 +83,8 @@ WITH analytics AS (
 )
 SELECT  event_date
       , platform 
-      , {{ get_version_record_from_normalized('app_version_join_value') }} AS app_version
-      , {{ get_version_record_from_normalized('platform_version_join_value') }} AS platform_version
+      , {{ overbase_firebase.get_version_record_from_normalized('app_version_join_value') }} AS app_version
+      , {{ overbase_firebase.get_version_record_from_normalized('platform_version_join_value') }} AS platform_version
       , STRUCT<type STRING, manufacturer STRING, os_model STRING>(
          device_hardware_type, device_hardware_manufacturer, device_hardware_os_model
       ) as device_hardware
