@@ -54,6 +54,7 @@ WITH analytics AS (
     SELECT  event_date
           , platform 
           , app_id
+          , reverse_app_id
           , app_version.join_value as app_version_join_value
           , platform_version.join_value as platform_version_join_value
           , device_hardware.type AS device_hardware_type
@@ -63,12 +64,13 @@ WITH analytics AS (
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     AND event_name IN {{ tojson(allAnalyticsEventNames| list).replace("[", "(").replace("]", ")") }}
-    GROUP BY 1,2,3,4,5,6,7,8
+    GROUP BY 1,2,3,4,5,6,7,8,9
 )
 , crashlytics AS (
       SELECT  event_date
             , platform 
             , app_id
+            , reverse_app_id
             , app_version.join_value as app_version_join_value
             , platform_version.join_value as platform_version_join_value
             , device_hardware.type AS device_hardware_type
@@ -77,13 +79,14 @@ WITH analytics AS (
             , {{ custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='agg')|join("\n          , ") }}
   FROM {{ ref("fb_crashlytics_events") }}
   WHERE {{ overbase_firebase.crashlyticsDateFilterFor('event_date') }}
-  GROUP BY 1,2,3,4,5,6,7,8
+  GROUP BY 1,2,3,4,5,6,7,8,9
 
 )
 , joined_unpacked AS (
     SELECT  COALESCE(analytics.event_date ,  crashlytics.event_date ) AS event_date
           , COALESCE(analytics.platform ,  crashlytics.platform ) AS platform
           , COALESCE(analytics.app_id ,  crashlytics.app_id ) AS app_id
+          , COALESCE(analytics.reverse_app_id ,  crashlytics.reverse_app_id ) AS reverse_app_id
           , COALESCE(analytics.app_version_join_value ,  crashlytics.app_version_join_value ) AS app_version_join_value
           , COALESCE(analytics.platform_version_join_value ,  crashlytics.platform_version_join_value ) AS platform_version_join_value
           , COALESCE(analytics.device_hardware_type ,  crashlytics.device_hardware_type ) AS device_hardware_type
@@ -104,6 +107,7 @@ WITH analytics AS (
 SELECT  event_date
       , platform 
       , app_id
+      , reverse_app_id
       , {{ overbase_firebase.get_version_record_from_normalized('app_version_join_value') }} AS app_version
       , {{ overbase_firebase.get_version_record_from_normalized('platform_version_join_value') }} AS platform_version
       , STRUCT<type STRING, manufacturer STRING, os_model STRING>(
