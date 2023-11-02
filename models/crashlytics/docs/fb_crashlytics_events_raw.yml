@@ -14,6 +14,8 @@ models:
         description: "`app_user_id` custom key set in Firebase Crashlytics (by the Overbase SDK)"
       - name: app_id
         description: "iOS: bundle_identifier, Android: package_name"
+      - name: reverse_app_id
+        description: "iOS: bundle_identifier, Android: package_name in reversed format. So 'com.overbase.myapp' becomes 'myapp.overbase.com'"
       - name: event_id
         description: ""
       - name: platform

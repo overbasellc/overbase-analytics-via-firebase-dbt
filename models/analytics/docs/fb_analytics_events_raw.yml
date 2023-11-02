@@ -16,6 +16,8 @@ models:
       description: "The app set user_id"
     - name: app_id
       description: "iOS: bundle_identifier, Android: package_name"
+    - name: reverse_app_id
+      description: "iOS: bundle_identifier, Android: package_name in reversed format. So 'com.overbase.myapp' becomes 'myapp.overbase.com'"
     - name: event_name
       description: ""
     - name: platform

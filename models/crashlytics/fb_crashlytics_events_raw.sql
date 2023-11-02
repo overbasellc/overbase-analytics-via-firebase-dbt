@@ -13,21 +13,22 @@
 
 -- https://firebase.google.com/docs/crashlytics/bigquery-export#without_stack_traces
 SELECT    event_timestamp as event_ts
-		, received_timestamp as received_ts
-		, installation_uuid as crashlytics_user_pseudo_id
-		, (SELECT value FROM UNNEST(custom_keys) WHERE key = 'fb_user_pseudo_id') as firebase_analytics_user_pseudo_id
-		, COALESCE(user.id, (SELECT value FROM UNNEST(custom_keys) WHERE key = 'app_user_id')) as user_id
-		, bundle_identifier as app_id
-		, event_id
+    , received_timestamp as received_ts
+    , installation_uuid as crashlytics_user_pseudo_id
+    , (SELECT value FROM UNNEST(custom_keys) WHERE key = 'fb_user_pseudo_id') as firebase_analytics_user_pseudo_id
+    , COALESCE(user.id, (SELECT value FROM UNNEST(custom_keys) WHERE key = 'app_user_id')) as user_id
+    , bundle_identifier as app_id
+    , ARRAY_TO_STRING(ARRAY_REVERSE(SPLIT(bundle_identifier, '.')), '.') as reverse_app_id
+    , event_id
          -- the platform we get in operating_system.type is not populated for Android, only for iOS. So rely on _TABLE_SUFFIX instead
-		, CASE WHEN _TABLE_SUFFIX LIKE '%ANDROID%' THEN'ANDROID'
+    , CASE WHEN _TABLE_SUFFIX LIKE '%ANDROID%' THEN'ANDROID'
                WHEN _TABLE_SUFFIX LIKE '%IOS%' THEN'IOS'
                ELSE 'UNKNOWN' -- TODO: unit test for this
           END as platform 
-		, STRUCT<id STRING, title STRING, subtitle STRING, variant_id STRING>(
-			issue_id, issue_title, issue_subtitle, variant_id
- 		 ) as issue
-		, error_type
+    , STRUCT<id STRING, title STRING, subtitle STRING, variant_id STRING>(
+        issue_id, issue_title, issue_subtitle, variant_id
+    ) as issue
+    , error_type
         , process_state
         , STRUCT<app STRING, device STRING>(
         	app_orientation, device_orientation

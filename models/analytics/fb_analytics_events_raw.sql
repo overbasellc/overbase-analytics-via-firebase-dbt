@@ -18,6 +18,7 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , LOWER(user_pseudo_id) as user_pseudo_id
         , LOWER(user_id) as user_id
         , app_info.id as app_id
+        , ARRAY_TO_STRING(ARRAY_REVERSE(SPLIT(app_info.id, '.')), '.') as reverse_app_id
         , event_name
         , platform
         , app_info.install_source as appstore
