@@ -10,7 +10,7 @@
 ) }}
 
 
-{%- set columnNamesEventDimensions = ["app_id", "issue", "platform", "error_type", "process_state"
+{%- set columnNamesEventDimensions = ["app_id", "reverse_app_id", "issue", "platform", "error_type", "process_state"
                                      ,"orientation", "app_version", "platform_version", "jailbroken_state"
                                      ,"device_hardware", "custom_keys"
 ] -%}
