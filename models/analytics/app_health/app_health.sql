@@ -23,8 +23,9 @@
   {"model": "crashlytics", "name":"fatal_foreground_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'FOREGROUND'"},
   {"model": "crashlytics", "name":"fatal_background_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'BACKGROUND' "}
 ] %}
-{%- set allHealthMeasures = builtinMeasures + var("OVERBASE:CUSTOM_APP_HEALTH_MEASURES", []) %}
-{%- for customHealthMeasure in allHealthMeasures -%}
+{%- set allUnprocessedHealthMeasures = builtinMeasures + var("OVERBASE:CUSTOM_APP_HEALTH_MEASURES", []) %}
+{%- set allAnalyticsEventNames = set([]) -%}
+{%- for customHealthMeasure in allUnprocessedHealthMeasures -%}
     {%- set model = customHealthMeasure['model'] if customHealthMeasure['model'] is defined else "analytics" %}
     {%- if model not in ["analytics", "crashlytics"]-%}
         {{ exceptions.raise_compiler_error("Need to specify a valid model for each custom app health measure. Either 'analytics' or 'crashlytics'. Found " + model) }}
@@ -34,8 +35,9 @@
         {{ exceptions.raise_compiler_error("Can't have spaces inside the name of a custom app health measure. It needs to be a valid column name." ) }}
     {%- endif -%}
     {%- set additional_filter = customHealthMeasure["additional_filter"] if customHealthMeasure["additional_filter"] is defined else "True" -%}
-    {%- if customHealthMeasure["event_name"] is defined -%}
+    {%- if customHealthMeasure["event_name"] is defined and model == 'analytics' -%}
       {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
+      {%- set _ = allAnalyticsEventNames.add(customHealthMeasure["event_name"]) -%}
     {%- else -%}
       {%- set filter = additional_filter -%}
     {%- endif -%}
@@ -60,7 +62,7 @@ WITH analytics AS (
           , {{ custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='agg')|join("\n          , ") }}
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-    AND event_name IN {{ tojson(allHealthMeasures | selectattr("model", "equalto", "analytics") | map(attribute="event_name") | list).replace("[", "(").replace("]", ")") }}
+    AND event_name IN {{ tojson(allAnalyticsEventNames| list).replace("[", "(").replace("]", ")") }}
     GROUP BY 1,2,3,4,5,6,7,8
 )
 , crashlytics AS (
