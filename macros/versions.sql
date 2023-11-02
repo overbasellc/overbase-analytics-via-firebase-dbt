@@ -42,7 +42,7 @@
           SAFE_CAST(SUBSTR({{ normalizedAsString }}, 0, LENGTH({{ normalizedAsString }}) - 12) AS INT64), 
           SAFE_CAST(SUBSTR({{ normalizedAsString }}, -12, 6) AS INT64),
           SAFE_CAST(SUBSTR({{ normalizedAsString }}, -6, 6) AS INT64),
-          SAFE_CAST(CONCAT(SUBSTR({{ normalizedAsString }}, -12, 6), ".", SUBSTR({{ normalizedAsString }}, -6, 6)) AS FLOAT64),
+          SAFE_CAST(CONCAT(SAFE_CAST(SUBSTR({{ normalizedAsString }}, -12, 6) AS INT64), ".", SAFE_CAST(SUBSTR({{ normalizedAsString }}, -6, 6) AS INT64)) AS FLOAT64),
           CONCAT(SAFE_CAST(SUBSTR({{ normalizedAsString }}, 0, LENGTH({{ normalizedAsString }}) - 12) AS INT64), ".", SAFE_CAST(SUBSTR({{ normalizedAsString }}, -12, 6) AS INT64), ".", SAFE_CAST(SUBSTR({{ normalizedAsString }}, -6, 6) AS INT64)),
           SAFE_CAST({{ normalizedAsString }} AS INT64)
    )
