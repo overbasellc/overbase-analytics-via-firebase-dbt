@@ -66,6 +66,21 @@ WITH analytics AS (
     AND event_name IN {{ tojson(allAnalyticsEventNames| list).replace("[", "(").replace("]", ")") }}
     GROUP BY 1,2,3,4,5,6,7,8,9
 )
+, installs AS (
+      SELECT  event_date
+          , platform 
+          , app_id
+          , reverse_app_id
+          , app_version.join_value as app_version_join_value
+          , platform_version.join_value as platform_version_join_value
+          , device_hardware.type AS device_hardware_type
+          , device_hardware.manufacturer AS device_hardware_manufacturer
+          , device_hardware.os_model AS device_hardware_os_model
+          , SUM(users) as users
+    FROM {{ ref("fb_analytics_installs") }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+    GROUP BY 1,2,3,4,5,6,7,8,9
+)
 , crashlytics AS (
       SELECT  event_date
             , platform 
@@ -83,26 +98,36 @@ WITH analytics AS (
 
 )
 , joined_unpacked AS (
-    SELECT  COALESCE(analytics.event_date ,  crashlytics.event_date ) AS event_date
-          , COALESCE(analytics.platform ,  crashlytics.platform ) AS platform
-          , COALESCE(analytics.app_id ,  crashlytics.app_id ) AS app_id
-          , COALESCE(analytics.reverse_app_id ,  crashlytics.reverse_app_id ) AS reverse_app_id
-          , COALESCE(analytics.app_version_join_value ,  crashlytics.app_version_join_value ) AS app_version_join_value
-          , COALESCE(analytics.platform_version_join_value ,  crashlytics.platform_version_join_value ) AS platform_version_join_value
-          , COALESCE(analytics.device_hardware_type ,  crashlytics.device_hardware_type ) AS device_hardware_type
-          , COALESCE(analytics.device_hardware_manufacturer ,  crashlytics.device_hardware_manufacturer ) AS device_hardware_manufacturer
-          , COALESCE(analytics.device_hardware_os_model ,  crashlytics.device_hardware_os_model ) AS device_hardware_os_model
+    SELECT  COALESCE(analytics.event_date, installs.event_date, crashlytics.event_date ) AS event_date
+          , COALESCE(analytics.platform, installs.platform, crashlytics.platform ) AS platform
+          , COALESCE(analytics.app_id, installs.app_id, crashlytics.app_id ) AS app_id
+          , COALESCE(analytics.reverse_app_id, installs.reverse_app_id, crashlytics.reverse_app_id ) AS reverse_app_id
+          , COALESCE(analytics.app_version_join_value, installs.app_version_join_value, crashlytics.app_version_join_value ) AS app_version_join_value
+          , COALESCE(analytics.platform_version_join_value, installs.platform_version_join_value, crashlytics.platform_version_join_value ) AS platform_version_join_value
+          , COALESCE(analytics.device_hardware_type, installs.device_hardware_type, crashlytics.device_hardware_type ) AS device_hardware_type
+          , COALESCE(analytics.device_hardware_manufacturer, installs.device_hardware_manufacturer, crashlytics.device_hardware_manufacturer ) AS device_hardware_manufacturer
+          , COALESCE(analytics.device_hardware_os_model, installs.device_hardware_os_model, crashlytics.device_hardware_os_model ) AS device_hardware_os_model
+          , installs.users as installs
           , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='alias'), "analytics.") | join("\n          , ") }}
           , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='alias'), "crashlytics.") | join("\n          , ") }}
-    FROM crashlytics
-    FULL OUTER JOIN analytics ON 
+    FROM analytics
+    FULL OUTER JOIN installs ON 
+            analytics.event_date = installs.event_date
+       AND  analytics.platform   = installs.platform
+       AND  analytics.app_version_join_value       = installs.app_version_join_value
+       AND  analytics.platform_version_join_value  = installs.platform_version_join_value
+       AND  analytics.device_hardware_type         = installs.device_hardware_type
+       AND  analytics.device_hardware_manufacturer = installs.device_hardware_manufacturer
+       AND  analytics.device_hardware_os_model     = installs.device_hardware_os_model
+    FULL OUTER JOIN crashlytics ON 
             analytics.event_date = crashlytics.event_date
-       AND  analytics.platform = crashlytics.platform
-       AND  analytics.app_version_join_value = crashlytics.app_version_join_value
-       AND  analytics.platform_version_join_value = crashlytics.platform_version_join_value
-       AND  analytics.device_hardware_type = crashlytics.device_hardware_type
+       AND  analytics.platform   = crashlytics.platform
+       AND  analytics.app_version_join_value       = crashlytics.app_version_join_value
+       AND  analytics.platform_version_join_value  = crashlytics.platform_version_join_value
+       AND  analytics.device_hardware_type         = crashlytics.device_hardware_type
        AND  analytics.device_hardware_manufacturer = crashlytics.device_hardware_manufacturer
-       AND  analytics.device_hardware_os_model = crashlytics.device_hardware_os_model
+       AND  analytics.device_hardware_os_model     = crashlytics.device_hardware_os_model
+
 )
 SELECT  event_date
       , platform 
@@ -113,6 +138,7 @@ SELECT  event_date
       , STRUCT<type STRING, manufacturer STRING, os_model STRING>(
          device_hardware_type, device_hardware_manufacturer, device_hardware_os_model
       ) as device_hardware
+      , installs
      , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='alias')) | join("\n          ,") }}
      , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='alias')) | join("\n          ,") }}
 FROM joined_unpacked
