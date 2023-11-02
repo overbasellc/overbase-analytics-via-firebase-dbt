@@ -66,11 +66,11 @@ vars:
           # - { property_name: network_state, data_type: 'string'}
     # "OVERBASE:CUSTOM_APP_HEALTH_MEASURES":  # optional, any custom measures that you want rolled up in the app_health model
     #         - name: signup_step_1 #no spaces, needs to be a proper column name
-    #           model: analytics # optional. It can either be analytics or crashlytics. Default is analytics
+    #           model: analytics_forced_nulls # optional. It can either be analytics/analytics-forced-nulls/crashlytics. Default is analytics
     #           agg: SUM(##)
     #           event_name: ui_view_shown
     #           # mini_measures: ["cnt", "users"] # optional, the default it aggregates over if unspecified
-    #           additional_filter  : event_parameters.view_name_string = 'signup step 1' AND event_parameters.view_type_string = 'ob-forced-null'
+    #           additional_filter  : event_parameters.view_name_string = 'signup step 1'
     #         - name: svc_inbound_duration
     #           agg: SUM(##)
     #           event_name: spend_virtual_currency

@@ -25,25 +25,29 @@
 ] %}
 {%- set allUnprocessedHealthMeasures = builtinMeasures + var("OVERBASE:CUSTOM_APP_HEALTH_MEASURES", []) %}
 {%- set allAnalyticsEventNames = set([]) -%}
+{%- set allAnalyticsForcedNullEventNames = set([]) -%}
 {%- for customHealthMeasure in allUnprocessedHealthMeasures -%}
     {%- set model = customHealthMeasure['model'] if customHealthMeasure['model'] is defined else "analytics" %}
-    {%- if model not in ["analytics", "crashlytics"]-%}
-        {{ exceptions.raise_compiler_error("Need to specify a valid model for each custom app health measure. Either 'analytics' or 'crashlytics'. Found " + model) }}
+    {%- if model not in ["analytics", "analytics_forced_nulls", "crashlytics"]-%}
+        {{ exceptions.raise_compiler_error("Need to specify a valid model for each custom app health measure. Either 'analytics','analytics_forced_nulls', 'crashlytics'. Found " + model) }}
     {%- endif -%}
     {%- set user_column_name = customHealthMeasure['name'] %}
     {%- if " " in user_column_name -%}
         {{ exceptions.raise_compiler_error("Can't have spaces inside the name of a custom app health measure. It needs to be a valid column name." ) }}
     {%- endif -%}
     {%- set additional_filter = customHealthMeasure["additional_filter"] if customHealthMeasure["additional_filter"] is defined else "True" -%}
-    {%- if customHealthMeasure["event_name"] is defined and model == 'analytics' -%}
+    {%- if customHealthMeasure["event_name"] is defined -%}
       {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
-      {%- set _ = allAnalyticsEventNames.add(customHealthMeasure["event_name"]) -%}
+      {%- if model == 'analytics' -%}
+        {%- set _ = allAnalyticsEventNames.add(customHealthMeasure["event_name"]) -%}
+      {%- elif model == 'analytics_forced_nulls' -%}
+        {%- set _ = allAnalyticsForcedNullEventNames.add(customHealthMeasure["event_name"]) -%}
+      {%- endif -%}
     {%- else -%}
       {%- set filter = additional_filter -%}
     {%- endif -%}
     {%- set mini_measures = customHealthMeasure["mini_measures"] if customHealthMeasure["mini_measures"] is defined else ["cnt", "users"] -%}
     {%- for cnt in mini_measures -%}
-      {# do all for combinations for coc, cou (count over users), uou, uoc #}
         {%- set column_name = "" ~ user_column_name ~ "_" ~ cnt %}
         {%- set agg  = customHealthMeasure['agg'] | replace("##", "IF(" ~ filter    ~ ", " ~ cnt ~", 0)") -%}
         {%- set _ = custom_summed_measures.append({"model": model, "agg": agg ~ " as " ~ column_name, "alias": column_name }) -%}
@@ -67,6 +71,22 @@ WITH analytics AS (
     AND event_name IN {{ tojson(allAnalyticsEventNames| list).replace("[", "(").replace("]", ")") }}
     GROUP BY {{ range(1, 1 + commonDimensionsAndAliases | length) | list | join(",") }} 
 )
+, analyticsForcedNulls AS (
+    SELECT {%- for dimAndAlias in commonDimensionsAndAliases -%}
+           {{ "," if not loop.first else "" }} {{ dimAndAlias[0] }} AS {{ dimAndAlias[1] }}
+           {% endfor -%}
+          {%- for measure in  custom_summed_measures | selectattr("model", "equalto", "analytics_forced_nulls") | map(attribute='agg') %}
+            , {{ measure }}
+          {%- endfor %}
+    FROM {{ ref("fb_analytics_events_forced_nulls") }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+    {% if allAnalyticsForcedNullEventNames | length == 0 -%}
+    AND False
+    {%- else -%}
+    AND event_name IN {{ tojson(allAnalyticsForcedNullEventNames | list).replace("[", "(").replace("]", ")") }}
+    {%- endif %}
+    GROUP BY {{ range(1, 1 + commonDimensionsAndAliases | length) | list | join(",") }} 
+)
 , installs AS (
     SELECT {%- for dimAndAlias in commonDimensionsAndAliases -%}
            {{ "," if not loop.first else "" }} {{ dimAndAlias[0] }} AS {{ dimAndAlias[1] }}
@@ -87,13 +107,15 @@ WITH analytics AS (
 )
 , joined_unpacked AS (
     SELECT {%- for dimAndAlias in commonDimensionsAndAliases -%}
-           {{ "," if not loop.first else "" }} COALESCE(analytics.{{ dimAndAlias[1] }}, installs.{{ dimAndAlias[1] }}, crashlytics.{{ dimAndAlias[1] }}) AS {{ dimAndAlias[1] }}
+           {{ "," if not loop.first else "" }} COALESCE(analytics.{{ dimAndAlias[1] }}, analyticsForcedNulls.{{ dimAndAlias[1] }}, installs.{{ dimAndAlias[1] }}, crashlytics.{{ dimAndAlias[1] }}) AS {{ dimAndAlias[1] }}
            {% endfor -%}
-
           , installs.users as installs
-          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='alias'), "analytics.") | join("\n          , ") }}
-          , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='alias'), "crashlytics.") | join("\n          , ") }}
+           , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias'), "crashlytics.") | join("\n          , ") }}
     FROM analytics
+    FULL OUTER JOIN analyticsForcedNulls ON 
+           {%- for dimAndAlias in commonDimensionsAndAliases -%}
+           {{ "AND" if not loop.first else "" }} analytics.{{ dimAndAlias[1] }} = analyticsForcedNulls.{{ dimAndAlias[1] }}
+           {% endfor %}
     FULL OUTER JOIN installs ON 
            {%- for dimAndAlias in commonDimensionsAndAliases -%}
            {{ "AND" if not loop.first else "" }} analytics.{{ dimAndAlias[1] }} = installs.{{ dimAndAlias[1] }}
@@ -113,8 +135,8 @@ SELECT  event_date
          device_hardware_type, device_hardware_manufacturer, device_hardware_os_model
       ) as device_hardware
       , installs
-     , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='alias')) | join("\n          ,") }}
-     , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | selectattr("model", "equalto", "crashlytics") | map(attribute='alias')) | join("\n          ,") }}
+      , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias')) | join("\n          ,") }}
+     
 FROM joined_unpacked
 
 -- For debugging
