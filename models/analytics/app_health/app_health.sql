@@ -14,6 +14,7 @@
 {%- set builtinMeasures = [
   {"model": "analytics", "name":"user_engagement"  , "agg": "SUM(##)", "event_name": "user_engagement"},
   {"model": "analytics", "name":"ob_app_foreground", "agg": "SUM(##)", "event_name": "ob_app_foreground"},
+  {"model": "analytics", "name":"ob_app_background", "agg": "SUM(##)", "event_name": "ob_app_background"},
   {"model": "analytics", "name":"app_update"   , "agg": "SUM(##)", "event_name": "app_update"},
   {"model": "analytics", "name":"ob_app_update", "agg": "SUM(##)", "event_name": "ob_app_update"},
 
