@@ -53,17 +53,17 @@ vars:
     #   - geo.city
     #   - geo.metro
     # "OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
-          # - { property_name: up_just_in_raw, data_type: 'string'} 
-          # - { property_name: first_open_time, data_type: 'int'} 
-          # - { property_name: poorly_set_variable, data_type: 'double'}
+          # - { key_name: up_just_in_raw, data_type: 'string'} 
+          # - { key_name: first_open_time, data_type: 'int'} 
+          # - { key_name: poorly_set_variable, data_type: 'double'}
     # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
-          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric'}
-          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', field_name: 'quantity_int_sum2' }
-          # - { property_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', field_name: 'quantity_avg' }
-          # - { property_name: myDimension, data_type: 'string',  rollup_type: 'alsoForceNullDimension'}
-          # - { property_name: server_sent_ts, data_type: 'string',  rollup_type: 'dimension', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', field_name: 'server_sent_ts' }
+          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric'}
+          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int_sum2' }
+          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', struct_field_name: 'quantity_avg' }
+          # - { key_name: myDimension, data_type: 'string',  rollup_type: 'alsoForceNullDimension'}
+          # - { key_name: server_sent_ts, data_type: 'string',  rollup_type: 'dimension', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', struct_field_name: 'server_sent_ts' }
     # "OVERBASE:CUSTOM_CRASHLYTICS_KEYS":  # data_types : "string", "int", "float", "double"
-          # - { property_name: network_state, data_type: 'string'}
+          # - { key_name: network_state, data_type: 'string'}
     # "OVERBASE:CUSTOM_APP_HEALTH_MEASURES":  # optional, any custom measures that you want rolled up in the app_health model
     #         - name: signup_step_1 #no spaces, needs to be a proper column name
     #           model: analytics_forced_nulls # optional. It can either be analytics/analytics-forced-nulls/crashlytics. Default is analytics

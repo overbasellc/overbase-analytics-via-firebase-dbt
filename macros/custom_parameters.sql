@@ -1,5 +1,5 @@
 {# Array of tuples [
-(property_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] #}
+(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] #}
 {% macro get_user_property_tuples_all() -%}
     {% set builtin_parameters = [ 
             ("ob_ui_dark_mode", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
@@ -14,7 +14,7 @@
 
 
 {# Array of tuples [
-(property_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
+(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
     ('ob_view_name', 'STRING', 'dimension', 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
 #}
 {% macro get_event_parameter_tuples_all() -%}
@@ -45,7 +45,7 @@
 {%- endmacro %}
 
 {# Array of tuples [
-(property_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
+(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
     ('ob_view_name', 'STRING', 'dimension', 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
 #}
 {% macro get_crashlytics_custom_key_tuples_all() -%}
@@ -143,12 +143,12 @@
 
 
 
-{# Flatten from YAML array dict [{'property_name': 'foo', 'data_type':'bar', 'rollup_type':'dimension'}] to a simple array
- of tuples [('my_custom_user_prop', 'string', 'dimension', 'extract_transformation', 'metric_rollup_transformation', 'field_name', 'output_data_type')] #}
+{# Flatten from YAML array dict [{'key_name': 'foo', 'data_type':'bar', 'rollup_type':'dimension'}] to a simple array
+ of tuples [('my_custom_user_prop', 'string', 'dimension', 'extract_transformation', 'metric_rollup_transformation', 'struct_field_name', 'output_data_type')] #}
 {% macro flatten_yaml_parameters(custom_array_of_dicts) -%}
     {% set flat_result = [] %}
     {% for dict in custom_array_of_dicts %}
-        {{ flat_result.append((dict['property_name'], dict['data_type'], dict['rollup_type'], dict['extract_transformation'], dict['metric_rollup_transformation'], dict['field_name'], dict['output_data_type'])) }}
+        {{ flat_result.append((dict['key_name'], dict['data_type'], dict['rollup_type'], dict['extract_transformation'], dict['metric_rollup_transformation'], dict['struct_field_name'], dict['output_data_type'])) }}
     {% endfor %}
     {{ return(flat_result) }}
 {% endmacro %}
@@ -156,7 +156,7 @@
 {% macro set_transformation_and_field_name(parameter_tuples) -%}
     {%- set result = [] -%}
     {%- for tuple in parameter_tuples -%}
-        {%- set property_name = tuple[0] -%}
+        {%- set key_name = tuple[0] -%}
         {%- set data_type = tuple[1] -%}
         {%- set rollup_type = tuple[2] -%}
 
@@ -174,11 +174,11 @@
 
         {%- set field_name = tuple[5] -%}
         {%- if field_name is not defined -%}
-            {%- set field_name = property_name ~ "_" ~ data_type.lower() -%}
+            {%- set field_name = key_name ~ "_" ~ data_type.lower() -%}
         {%- endif -%}
         {%- set bq_type = tuple[6] -%}
 
-        {%- set _ = result.append((property_name, data_type, rollup_type, extract_transformation, metric_rollup_transformation, field_name, bq_type) ) -%}
+        {%- set _ = result.append((key_name, data_type, rollup_type, extract_transformation, metric_rollup_transformation, field_name, bq_type) ) -%}
     {%- endfor -%}
     {{ return(result) }}
 {% endmacro %}

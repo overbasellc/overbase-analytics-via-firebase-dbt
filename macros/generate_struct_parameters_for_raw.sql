@@ -23,7 +23,7 @@
 
     {%- set structFieldNames = [] -%}
     {%- for parameter in all_parameters -%}
-        {%- set property_name = parameter[0] -%}
+        {%- set key_name = parameter[0] -%}
         {%- set data_type = parameter[1] -%}
         {%- set rollup_type = parameter[2] -%}
         {%- set extract_transformation = parameter[3] -%}
@@ -36,7 +36,7 @@
 
     {%- set structValues = [] -%}
     {% for parameter in all_parameters -%}
-        {%- set property_name = parameter[0] -%}
+        {%- set key_name = parameter[0] -%}
         {%- set data_type = parameter[1] -%}
         {%- set rollup_type = parameter[2] -%}
         {%- set extract_transformation = parameter[3] -%}
@@ -44,7 +44,7 @@
         {%- set struct_field_name = parameter[5] -%}
         {%- set bq_type = parameter[6] -%}
         {%- set how_to_extract_value = parameter[7] -%}
-           {%- set _ = structValues.append("(SELECT " ~ extract_transformation|replace("##", how_to_extract_value) ~ " FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ property_name + "')") -%}
+           {%- set _ = structValues.append("(SELECT " ~ extract_transformation|replace("##", how_to_extract_value) ~ " FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ key_name + "')") -%}
     {%- endfor -%}
     {%- if structFieldNames|length > 0 -%}
       STRUCT<{{ structFieldNames | join(",")}}>(
