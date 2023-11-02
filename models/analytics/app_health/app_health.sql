@@ -20,7 +20,7 @@
 
   {"model": "crashlytics", "name":"all_errors", "agg": "SUM(##)"},
   {"model": "crashlytics", "name":"fatal_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL'"},
-  {"model": "crashlytics", "name":"fatal_foregrond_crashes" , "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'FOREGROUND'"},
+  {"model": "crashlytics", "name":"fatal_foreground_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'FOREGROUND'"},
   {"model": "crashlytics", "name":"fatal_background_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'BACKGROUND' "}
 ] %}
 {%- set allHealthMeasures = builtinMeasures + var("OVERBASE:CUSTOM_APP_HEALTH_MEASURES", []) %}
