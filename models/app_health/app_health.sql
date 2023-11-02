@@ -109,8 +109,8 @@ WITH analytics AS (
     SELECT {%- for dimAndAlias in commonDimensionsAndAliases -%}
            {{ "," if not loop.first else "" }} COALESCE(analytics.{{ dimAndAlias[1] }}, analyticsForcedNulls.{{ dimAndAlias[1] }}, installs.{{ dimAndAlias[1] }}, crashlytics.{{ dimAndAlias[1] }}) AS {{ dimAndAlias[1] }}
            {% endfor -%}
-          , installs.users as installs
-           , {{ overbase_firebase.list_map_and_add_prefix(custom_summed_measures | map(attribute='alias'), "crashlytics.") | join("\n          , ") }}
+           , installs.users as installs
+           , {{ custom_summed_measures | map(attribute='alias') | join("\n          , ") }}
     FROM analytics
     FULL OUTER JOIN analyticsForcedNulls ON 
            {%- for dimAndAlias in commonDimensionsAndAliases -%}
