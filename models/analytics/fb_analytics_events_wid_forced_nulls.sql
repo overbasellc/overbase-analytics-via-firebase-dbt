@@ -45,7 +45,7 @@
 {%- endfor -%}
 
 {%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
-WITH nillableData as (
+WITH data as (
     SELECT    DATE(events.event_ts) as event_date
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, miniColumnsToAlsoNil ,"events.", "event_") }}
             , DATE(installs.install_ts) as install_date
@@ -59,6 +59,8 @@ WITH nillableData as (
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
     WHERE {{ overbase_firebase.analyticsTSFilterFor('events.event_ts') }}
+    {%- set eventNamesToLookFor = set(overbase_firebase.flatten_list_of_lists(overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() | map(attribute="force_null_dimension_event_name_filter") | list)) %}
+    AND {{ overbase_firebase.makeListIntoSQLInFilter("event_name", eventNamesToLookFor| list) }}
     AND installs.event_ts >= TIMESTAMP('2022-01-01')
     -- TODO: max join on installs ?
     GROUP BY 1,2,3,4 {% for n in range(5, 5 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}

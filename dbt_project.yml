@@ -62,6 +62,19 @@ vars:
           # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', struct_field_name: 'quantity_avg' }
           # - { key_name: myDimension, data_type: 'string',  rollup_type: 'alsoForceNullDimension'}
           # - { key_name: server_sent_ts, data_type: 'string',  rollup_type: 'dimension', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', struct_field_name: 'server_sent_ts' }
+      # key_name: server_sent_ts
+      # data_type: string
+      # rollup_type: metric/dimension/raw/alsoForceNullDimension
+      # metric_rollup_transformatin: 'SUM(##)' # optional, default is SUM()
+      # struct_field_name: quantity_ts # optional; default is key_name + '_' + data_type
+      # extract_transformation: "PARSE_DATE('%Y%m%d', ##)" # optional, becaomes PARSE_DATE('%Y%m%d', value.string_value); default is just the int/string value
+      # output_data_type: TIMESTAMP # optional, default is the same as what was extracted, e.g. string
+      # event_name_filter: ["notification_received"] # optional, default is to extract for all events
+      # force_null_dimension_event_name_filter: [] #, optional, default is to extract for all events
+    #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric'}
+    #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int_sum2' }
+    #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', struct_field_name: 'quantity_avg' }
+          # - { key_name: server_sent_ts, data_type: 'string',  rollup_type: 'raw', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', struct_field_name: 'server_sent_ts' }
     # "OVERBASE:CUSTOM_CRASHLYTICS_KEYS":  # data_types : "string", "int", "float", "double"
           # - { key_name: network_state, data_type: 'string'}
     # "OVERBASE:CUSTOM_APP_HEALTH_MEASURES":  # optional, any custom measures that you want rolled up in the app_health model

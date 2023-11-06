@@ -1,59 +1,59 @@
-{# Array of tuples [
-(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] #}
+{# Array of dicts
+  key_name, data_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, output_data_type
+  event_name_filter, force_null_dimension_event_name_filter
+#}
 {% macro get_user_property_tuples_all() -%}
     {% set builtin_parameters = [ 
-            ("ob_ui_dark_mode", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
-           ,("ob_ui_font_size", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
+            {"key_name":"ob_ui_dark_mode", "data_type":"STRING", "rollup_type": "dimension"}
+           ,{"key_name":"ob_ui_font_size", "data_type":"STRING", "rollup_type": "dimension"}
     ]%}
-    {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_USER_PROPERTIES', [])) -%}
-    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
-    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters, "analytics") -%}
+    {%- set all_parameters = builtin_parameters +  var('OVERBASE:CUSTOM_USER_PROPERTIES', []) -%}
+    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters, "analytics") -%}
     {%- do overbase_firebase.validate_parameter_tuples(all_parameters) -%}
     {{ return(all_parameters) }}
 {%- endmacro %}
 
 
 {# Array of tuples [
-(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
-    ('ob_view_name', 'STRING', 'dimension', 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
+(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, event_name_filter, null_dimension_event_name_filter, bigquery_type, how_to_extract_from_unnest)] 
+    ('ob_view_name', 'STRING', 'dimension', 'STRING', 'ob_ui_view_shown', 'LOWER(value.string_value)', 'ob_view_name_string')
 #}
 {% macro get_event_parameter_tuples_all() -%}
     {# ob_ui_view_shown & ob_ui_button_tapped #}
-    {% set builtin_parameters = [ 
-            ("view_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined) 
-           ,("view_type", "STRING", "alsoForceNullDimension", Undefined, Undefined, Undefined, Undefined)
-           ,("parent_view_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
-           ,("parent_view_type", "STRING", "alsoForceNullDimension", Undefined, Undefined, Undefined, Undefined)
+    {%- set uiEventNameFilters = ["ob_ui_view_shown", "ob_ui_button_tapped", "ui_view_shown", "ui_button_tapped"] -%}
+    {%- set builtin_parameters = [ 
+            {"key_name":"view_name", "data_type":"STRING", "rollup_type":"dimension"} 
+           ,{"key_name":"view_type", "data_type":"STRING", "rollup_type":"alsoForceNullDimension", "force_null_dimension_event_name_filter": uiEventNameFilters}
+           ,{"key_name":"parent_view_name", "data_type":"STRING", "rollup_type":"dimension"}
+           ,{"key_name":"parent_view_type", "data_type":"STRING", "rollup_type":"alsoForceNullDimension",  "force_null_dimension_event_name_filter": uiEventNameFilters}
     ]%}
     {#  ob_ui_button_tapped #}
     {% set builtin_parameters = builtin_parameters + [
-            ("button_name", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined) 
-           ,("button_extra", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined) 
+            {"key_name":"button_name", "data_type":"STRING", "rollup_type":"dimension"} 
+           ,{"key_name":"button_extra", "data_type":"STRING", "rollup_type":"dimension"} 
     ]%}
     {# ob_error_server_% #}
     {% set builtin_parameters = builtin_parameters + [
-            ("domain", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)  
-           ,("path", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
-           ,("status_code", "INT", "dimension", Undefined, Undefined, Undefined, Undefined)
-           ,("extra", "STRING", "dimension", Undefined, Undefined, Undefined, Undefined)
+            {"key_name":"domain", "data_type":"STRING", "rollup_type":"dimension"}  
+           ,{"key_name":"path", "data_type":"STRING", "rollup_type":"dimension"}
+           ,{"key_name":"status_code", "data_type":"INT", "rollup_type":"dimension"}
+           ,{"key_name":"extra", "data_type":"STRING", "rollup_type":"dimension"}
     ]%}
-    {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_EVENT_PARAMETERS', [])) -%}
-    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
-    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters, "analytics") -%}
+    {%- set all_parameters = builtin_parameters +  var('OVERBASE:CUSTOM_EVENT_PARAMETERS', []) -%}
+    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters, "analytics") -%}
     {%- do overbase_firebase.validate_parameter_tuples(all_parameters) -%}
     {{ return(all_parameters) }}
 {%- endmacro %}
 
 {# Array of tuples [
-(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, bigquery_type, how_to_extract_from_unnest)] 
+(key_name, overbase_type, rollup_type, extract_transformation, metric_rollup_transformation, struct_field_name, event_name_filter, null_dimension_event_name_filter, bigquery_type, how_to_extract_from_unnest)] 
     ('ob_view_name', 'STRING', 'dimension', 'STRING', 'LOWER(value.string_value)', 'ob_view_name_string')
 #}
 {% macro get_crashlytics_custom_key_tuples_all() -%}
     {% set builtin_parameters = [ 
     ]%}
-    {%- set all_parameters = builtin_parameters +  overbase_firebase.flatten_yaml_parameters(var('OVERBASE:CUSTOM_CRASHLYTICS_KEYS', [])) -%}
-    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters) -%}
-    {%- set all_parameters = overbase_firebase.add_extra_types(all_parameters, "crashlytics") -%}
+    {%- set all_parameters = builtin_parameters +  var('OVERBASE:CUSTOM_CRASHLYTICS_KEYS', []) -%}
+    {%- set all_parameters = overbase_firebase.set_transformation_and_field_name(all_parameters, "crashlytics") -%}
     {%- do overbase_firebase.validate_parameter_tuples(all_parameters) -%}
     {{ return(all_parameters) }}
 {%- endmacro %}
@@ -63,10 +63,10 @@
 {# e.g. [event_parameters.call_id_string (a raw only custom property), event_parameters.quantity_int (a rollup_metric custom property)] #}
 {%- macro get_mini_columns_to_ignore_when_rolling_up() -%}
     {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw_only() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
-    {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute=5)|list, 'event_parameters.' ) -%}
+    {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute='struct_field_name')|list, 'event_parameters.' ) -%}
 
     {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw_only() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
-    {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute=5)|list, 'user_properties.' ) -%}
+    {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute='struct_field_name')|list, 'user_properties.' ) -%}
 
     {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
 
@@ -80,10 +80,10 @@
 
 {%- macro get_mini_columns_to_also_force_null_when_rolling_up() -%}
     {%- set eventParamsToNil = overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() -%}
-    {%- set eventParamsToNil = overbase_firebase.list_map_and_add_prefix(eventParamsToNil|map(attribute=5)|list, 'event_parameters.' ) -%}
+    {%- set eventParamsToNil = overbase_firebase.list_map_and_add_prefix(eventParamsToNil|map(attribute='struct_field_name')|list, 'event_parameters.' ) -%}
 
     {%- set userPropertiesToNil = overbase_firebase.get_user_property_tuples_for_rollup_alsoNullDimensions() -%}
-    {%- set userPropertiesToNil = overbase_firebase.list_map_and_add_prefix(userPropertiesToNil|map(attribute=5)|list, 'user_properties.' ) -%}
+    {%- set userPropertiesToNil = overbase_firebase.list_map_and_add_prefix(userPropertiesToNil|map(attribute='struct_field_name')|list, 'user_properties.' ) -%}
 
     {%- set miniColumnsToNil = eventParamsToNil + userPropertiesToNil -%}
 
@@ -94,112 +94,117 @@
 {# ################################### #}
 {# Helper Macros #}
 {%- macro get_user_property_tuples_for_rollup_metrics() -%}
-{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'metric') | list -%}
+{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', 'metric') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
 {%- macro get_user_property_tuples_for_rollup_dimensions() -%}
-{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
-{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
+{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', 'dimension') | list -%}
+{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result + result2) -%}
 {%- endmacro %}
 
 {%- macro get_user_property_tuples_for_rollup_alsoNullDimensions() -%}
-{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
+{%- set result = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
 {%- macro get_user_property_tuples_for_raw_only() -%}
-{%- set result  = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', 'raw') | list -%}
-{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'equalto', '') | list -%}
-{%- set result3 = overbase_firebase.get_user_property_tuples_all() | selectattr(2, 'undefined') | list -%}
+{%- set result  = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', 'raw') | list -%}
+{%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', '') | list -%}
+{%- set result3 = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'undefined') | list -%}
 {%- do return(result + result2 + result3) -%}
 {%- endmacro %}
 
 
 {%- macro get_event_parameter_tuples_for_rollup_metrics() -%}
-{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'metric') | list -%}
+{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'metric') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
 {%- macro get_event_parameter_tuples_for_rollup_dimensions() -%}
-{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'dimension') | list -%}
-{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
+{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'dimension') | list -%}
+{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result + result2) -%}
 {%- endmacro %}
 
 {%- macro get_event_parameter_tuples_for_rollup_alsoNullDimensions() -%}
-{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'alsoForceNullDimension') | list -%}
+{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'alsoForceNullDimension') | list -%}
 {%- do return(result) -%}
 {%- endmacro %}
 
-
 {%- macro get_event_parameter_tuples_for_raw_only() -%}
-{%- set result  = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', 'raw') | list -%}
-{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'equalto', '') | list -%}
-{%- set result3 = overbase_firebase.get_event_parameter_tuples_all() | selectattr(2, 'undefined') | list -%}
+{%- set result  = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'raw') | list -%}
+{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', '') | list -%}
+{%- set result3 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'undefined') | list -%}
 {%- do return(result + result2 + result3) -%}
 {%- endmacro %}
 
 
 
-{# Flatten from YAML array dict [{'key_name': 'foo', 'data_type':'bar', 'rollup_type':'dimension'}] to a simple array
- of tuples [('my_custom_user_prop', 'string', 'dimension', 'extract_transformation', 'metric_rollup_transformation', 'struct_field_name', 'output_data_type')] #}
-{% macro flatten_yaml_parameters(custom_array_of_dicts) -%}
-    {% set flat_result = [] %}
-    {% for dict in custom_array_of_dicts %}
-        {{ flat_result.append((dict['key_name'], dict['data_type'], dict['rollup_type'], dict['extract_transformation'], dict['metric_rollup_transformation'], dict['struct_field_name'], dict['output_data_type'])) }}
-    {% endfor %}
-    {{ return(flat_result) }}
-{% endmacro %}
-
-{% macro set_transformation_and_field_name(parameter_tuples) -%}
+{% macro set_transformation_and_field_name(parameterDicts, analyticsOrCrashlytics) -%}
     {%- set result = [] -%}
-    {%- for tuple in parameter_tuples -%}
-        {%- set key_name = tuple[0] -%}
-        {%- set data_type = tuple[1] -%}
-        {%- set rollup_type = tuple[2] -%}
+    {%- for parameterDict in parameterDicts -%}
+        {%- if analyticsOrCrashlytics == "analytics" -%}
+            {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types(parameterDict['key_name'], parameterDict['data_type'].lower()) -%}
+        {%- else -%}
+            {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types_crashlytics(parameterDict['key_name'], parameterDict['data_type'].lower()) -%}
+        {%- endif -%}
 
-        {%- set extract_transformation = tuple[3] -%}
+        {%- set key_name = parameterDict['key_name'] -%}
+        {%- set data_type = parameterDict['data_type'] -%}
+        {%- set rollup_type = parameterDict['rollup_type'] -%}
+
+        {%- set extract_transformation = parameterDict['extract_transformation'] -%}
         {%- if extract_transformation is not defined -%}
             {%- set extract_transformation = "##" -%}
         {%- endif -%}
+        {%- set extract_transformation = extract_transformation | replace ("##", bqTypeAndHowToExtractTuple[1]) -%}
 
-        {%- set metric_rollup_transformation = tuple[4] -%}
+
+        {%- set metric_rollup_transformation = parameterDict['metric_rollup_transformation'] -%}
         {%- if metric_rollup_transformation is not defined -%}
             {%- if rollup_type == "metric" -%}
                 {%- set metric_rollup_transformation = "SUM(##)" -%}
             {%- endif -%}
         {%- endif -%}
 
-        {%- set field_name = tuple[5] -%}
-        {%- if field_name is not defined -%}
-            {%- set field_name = key_name ~ "_" ~ data_type.lower() -%}
+        {%- set struct_field_name = parameterDict['struct_field_name'] -%}
+        {%- if struct_field_name is not defined -%}
+            {%- set struct_field_name = key_name ~ "_" ~ data_type.lower() -%}
         {%- endif -%}
-        {%- set bq_type = tuple[6] -%}
+        {%- set output_data_type = parameterDict['output_data_type'] -%}
+        {%- if output_data_type is not defined -%}
+            {%- set output_data_type = bqTypeAndHowToExtractTuple[0] -%}
+        {%- endif -%}
 
-        {%- set _ = result.append((key_name, data_type, rollup_type, extract_transformation, metric_rollup_transformation, field_name, bq_type) ) -%}
+        {%- set event_name_filter = parameterDict['event_name_filter'] -%}
+        {%- if event_name_filter is not defined -%}
+            {%- set event_name_filter = [] -%}
+        {%- endif -%}
+
+        {%- set force_null_dimension_event_name_filter = parameterDict['force_null_dimension_event_name_filter'] -%}
+        {%- if force_null_dimension_event_name_filter is not defined -%}
+            {%- set force_null_dimension_event_name_filter = [] -%}
+        {%- endif -%}
+        {%- if rollup_type == 'alsoForceNullDimension' and (force_null_dimension_event_name_filter | length) == 0 -%}
+            {{ exceptions.raise_compiler_error("rollupType=alsoForceNullDimension also requires a 'force_null_dimension_event_name_filter'") }}
+        {%- endif -%}
+
+
+        {%- set _ = result.append({"key_name": key_name,
+                                   "data_type": data_type,
+                                   "rollup_type": rollup_type,
+                                   "extract_transformation": extract_transformation, 
+                                   "metric_rollup_transformation": metric_rollup_transformation, 
+                                   "struct_field_name": struct_field_name,
+                                   "output_data_type": output_data_type,
+                                   "event_name_filter": event_name_filter,
+                                   "force_null_dimension_event_name_filter": force_null_dimension_event_name_filter
+                            }) -%}
     {%- endfor -%}
     {{ return(result) }}
 {% endmacro %}
-
-{% macro add_extra_types(parameter_tuples, analyticsOrCrashlytics) -%}
-    {%- set result = [] -%}
-    {%- for tuple in parameter_tuples -%}
-        {%- if analyticsOrCrashlytics == "analytics" -%}
-            {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types(tuple[0], tuple[1].lower()) -%}
-        {%- else -%}
-            {%- set bqTypeAndHowToExtractTuple = overbase_firebase.get_extra_parameter_types_crashlytics(tuple[0], tuple[1].lower()) -%}
-        {%- endif -%}
-        {%- if tuple[6] is not defined -%}
-            {%- set _ = result.append((tuple[0],tuple[1], tuple[2], tuple[3], tuple[4], tuple[5], bqTypeAndHowToExtractTuple[0], bqTypeAndHowToExtractTuple[1])) -%}
-        {%- else -%}
-            {%- set _ = result.append((tuple[0],tuple[1], tuple[2], tuple[3], tuple[4], tuple[5], tuple[6], bqTypeAndHowToExtractTuple[1])) -%}
-        {%- endif -%}        
-    {%- endfor -%}
-    {{ return(result) }}
-{% endmacro %}
-
 
 
 {# returns an tuple of (TYPE of said value, how to extract value) 

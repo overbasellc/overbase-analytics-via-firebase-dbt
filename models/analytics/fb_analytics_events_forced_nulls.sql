@@ -30,8 +30,8 @@
 {%- endfor -%}
 {%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
 
-WITH nillableData as (
-      SELECT   DATE(event_ts) as event_date
+WITH data as (
+    SELECT    DATE(event_ts) as event_date
             , {{ overbase_firebase.install_age_group("install_age") }} AS install_age_group
             , {{ overbase_firebase.unpack_columns_into_minicolumns(columnsForEventDimensions, miniColumnsToIgnoreInGroupBy, miniColumnsToAlsoNil, "", "") }}
             , COUNT(1) as cnt
@@ -40,6 +40,8 @@ WITH nillableData as (
 
     FROM {{ ref("fb_analytics_events_raw") }}
     WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+    {%- set eventNamesToLookFor = set(overbase_firebase.flatten_list_of_lists(overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() | map(attribute="force_null_dimension_event_name_filter") | list)) %}
+    AND {{ overbase_firebase.makeListIntoSQLInFilter("event_name", eventNamesToLookFor| list) }}
     GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT event_date
@@ -48,4 +50,4 @@ SELECT event_date
         , cnt
         , users
         {{ ", " if custom_summed_metrics|length > 0 else "" }}  {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
-FROM nillableData
+FROM data

@@ -68,7 +68,7 @@ WITH analytics AS (
           , {{ custom_summed_measures | selectattr("model", "equalto", "analytics") | map(attribute='agg')|join("\n          , ") }}
     FROM {{ ref("fb_analytics_events") }}
     WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-    AND event_name IN {{ tojson(allAnalyticsEventNames| list).replace("[", "(").replace("]", ")") }}
+    AND {{ overbase_firebase.makeListIntoSQLInFilter("event_name", allAnalyticsEventNames| list) }}
     GROUP BY {{ range(1, 1 + commonDimensionsAndAliases | length) | list | join(",") }} 
 )
 , analyticsForcedNulls AS (
@@ -83,7 +83,7 @@ WITH analytics AS (
     {% if allAnalyticsForcedNullEventNames | length == 0 -%}
     AND False
     {%- else -%}
-    AND event_name IN {{ tojson(allAnalyticsForcedNullEventNames | list).replace("[", "(").replace("]", ")") }}
+    AND {{ overbase_firebase.makeListIntoSQLInFilter("event_name", allAnalyticsForcedNullEventNames| list) }}
     {%- endif %}
     GROUP BY {{ range(1, 1 + commonDimensionsAndAliases | length) | list | join(",") }} 
 )

@@ -23,28 +23,18 @@
 
     {%- set structFieldNames = [] -%}
     {%- for parameter in all_parameters -%}
-        {%- set key_name = parameter[0] -%}
-        {%- set data_type = parameter[1] -%}
-        {%- set rollup_type = parameter[2] -%}
-        {%- set extract_transformation = parameter[3] -%}
-        {%- set metric_rollup_transformation = parameter[4] -%}
-        {%- set struct_field_name = parameter[5] -%}
-        {%- set bq_type = parameter[6] -%}
-        {%- set how_to_extract_value = parameter[7] -%}
+        {%- set key_name = parameter['key_name'] -%}
+        {%- set struct_field_name = parameter['struct_field_name'] -%}
+        {%- set bq_type = parameter['output_data_type'] -%}
         {%- set _ = structFieldNames.append( struct_field_name ~ " " ~ bq_type ) -%}
     {%- endfor -%}
 
     {%- set structValues = [] -%}
     {% for parameter in all_parameters -%}
-        {%- set key_name = parameter[0] -%}
-        {%- set data_type = parameter[1] -%}
-        {%- set rollup_type = parameter[2] -%}
-        {%- set extract_transformation = parameter[3] -%}
-        {%- set metric_rollup_transformation = parameter[4] -%}
-        {%- set struct_field_name = parameter[5] -%}
-        {%- set bq_type = parameter[6] -%}
-        {%- set how_to_extract_value = parameter[7] -%}
-           {%- set _ = structValues.append("(SELECT " ~ extract_transformation|replace("##", how_to_extract_value) ~ " FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ key_name + "')") -%}
+        {%- set key_name = parameter['key_name'] -%}
+        {%- set extract_transformation = parameter['extract_transformation'] -%}
+        {%- set event_name_condition = overbase_firebase.makeListIntoSQLInFilter("event_name", parameter['event_name_filter']) -%}
+        {%- set _ = structValues.append("(SELECT IF(" ~ event_name_condition ~ "," ~ extract_transformation ~ ",NULL) FROM  UNNEST(" ~ firebase_record_name ~ ") WHERE key = '" ~ key_name + "')") -%}
     {%- endfor -%}
     {%- if structFieldNames|length > 0 -%}
       STRUCT<{{ structFieldNames | join(",")}}>(
