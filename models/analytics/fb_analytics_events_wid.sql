@@ -74,4 +74,4 @@ SELECT event_date
         , cnt
         , users
         , {{ custom_summed_metrics |map(attribute='alias')|join(", ") }}
-FROM nillableData
+FROM data
