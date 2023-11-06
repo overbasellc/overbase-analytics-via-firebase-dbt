@@ -43,7 +43,7 @@
     {# cm = custom metrics #}
     {%- set mrt = tuple['metric_rollup_transformation'] -%}
     {%- set sfn = tuple['struct_field_name'] -%}
-    {%- set _ = custom_summed_metrics.append({"agg": mrt|replace("##", "event_parameters." ~ sfn) ~ " as cm_" ~ sfn, "alias": "cm_" ~ sfn}) -%}
+    {%- set _ = custom_summed_metrics.append({"agg": mrt|replace("##", "events.event_parameters." ~ sfn) ~ " as cm_" ~ sfn, "alias": "cm_" ~ sfn}) -%}
 {%- endfor -%}
 
 {%- set miniColumnsToAlsoNil = overbase_firebase.get_mini_columns_to_also_force_null_when_rolling_up() -%}
