@@ -16,12 +16,30 @@
 
 {# So event_name ["foo", "bar"] becomes the string: event_name IN ("foo", "bar"). 
 If the list is empty, it returns just True
+It also looks for any values starting with "LIKE" and returns (event_name IN ('foo') OR event_name LIKE 'bar%')
  #}
 {%- macro makeListIntoSQLInFilter(sqlField, myList) -%}
-  {%- if myList | length > 0 -%}
-    {{ sqlField }} IN {{ tojson(myList).replace("[", "(").replace("]", ")") }}
-  {%- else -%}
+  {%- set myListOfExactValues = [] -%}
+  {%- set myListOfLikes = [] -%}
+  {%- for value in myList -%}
+    {%- if value.lower().startswith("like ") -%}
+      {%- set _ = myListOfLikes.append(sqlField ~ " " ~ value) -%}
+    {%- else -%}
+      {%- set _ = myListOfExactValues.append(value) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if myList | length == 0 -%}
     True
+  {%- else -%}
+    (
+      {%- if myListOfExactValues | length > 0 -%}
+        {{ sqlField }} IN {{ tojson(myListOfExactValues).replace("[", "(").replace("]", ")") }}
+      {%- endif -%}
+      {%- if myListOfExactValues | length > 0 and myListOfLikes | length > 0 %} OR {% endif -%}
+      {%- if myListOfLikes | length > 0 -%}
+        {{ myListOfLikes | join(" OR ") }}
+      {%- endif -%}
+    )
   {%- endif -%}
 {%- endmacro -%}
 

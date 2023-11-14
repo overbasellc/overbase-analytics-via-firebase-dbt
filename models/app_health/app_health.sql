@@ -17,8 +17,10 @@
   {"model": "analytics", "name":"ob_app_background", "agg": "SUM(##)", "event_name": "ob_app_background"},
   {"model": "analytics", "name":"app_update"   , "agg": "SUM(##)", "event_name": "app_update"},
   {"model": "analytics", "name":"ob_app_update", "agg": "SUM(##)", "event_name": "ob_app_update"},
+  {"model": "analytics", "name":"errors"  , "agg": "SUM(##)", "event_name": "LIKE 'error_%'"},
+  {"model": "analytics", "name":"ob_errors"  , "agg": "SUM(##)", "event_name": "LIKE 'ob_error_%'"},
 
-  {"model": "crashlytics", "name":"all_errors", "agg": "SUM(##)"},
+  {"model": "crashlytics", "name":"crashlytics_all_errors", "agg": "SUM(##)"},
   {"model": "crashlytics", "name":"fatal_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL'"},
   {"model": "crashlytics", "name":"fatal_foreground_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'FOREGROUND'"},
   {"model": "crashlytics", "name":"fatal_background_crashes", "agg": "SUM(##)", "additional_filter": "error_type = 'FATAL' AND process_state = 'BACKGROUND' "}
@@ -37,7 +39,12 @@
     {%- endif -%}
     {%- set additional_filter = customHealthMeasure["additional_filter"] if customHealthMeasure["additional_filter"] is defined else "True" -%}
     {%- if customHealthMeasure["event_name"] is defined -%}
-      {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
+      {%- if customHealthMeasure["event_name"].lower().startswith("like ") -%}
+        {%- set filter = "event_name " ~ customHealthMeasure["event_name"] -%}
+      {%- else -%}
+        {%- set filter = "event_name = '" ~ customHealthMeasure["event_name"] ~ "' AND " ~ additional_filter -%}
+      {%- endif -%}
+
       {%- if model == 'analytics' -%}
         {%- set _ = allAnalyticsEventNames.add(customHealthMeasure["event_name"]) -%}
       {%- elif model == 'analytics_forced_nulls' -%}
