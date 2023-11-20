@@ -61,11 +61,11 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , {{ overbase_firebase.generate_date_timezone_struct('TIMESTAMP_MICROS(user_first_touch_timestamp)') }} as install_dates
         , COUNT(1) OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) as duplicates_cnt
 FROM {{ source("firebase_analytics", "events") }}  as events
-LEFT JOIN {{ref('iso_country')}} as country_codes
+LEFT JOIN {{ref('ob_iso_country')}} as country_codes
     ON LOWER(events.geo.country) = LOWER(country_codes.firebase_name)
-LEFT JOIN {{ref("iso_language")}} as language_codes
+LEFT JOIN {{ref("ob_iso_language")}} as language_codes
     ON LOWER(SPLIT(events.device.language,'-')[SAFE_OFFSET(0)]) = language_codes.alpha_2
-LEFT JOIN {{ref('iso_country')}} as language_region_codes -- some language have 3 parts (e.g. zh-hans-us), so just get the last one
+LEFT JOIN {{ref('ob_iso_country')}} as language_region_codes -- some language have 3 parts (e.g. zh-hans-us), so just get the last one
     ON LOWER(ARRAY_REVERSE(SPLIT(events.device.language,'-'))[SAFE_OFFSET(0)]) = language_region_codes.alpha_2
 
 WHERE True 
