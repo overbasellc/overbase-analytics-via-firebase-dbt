@@ -23,10 +23,7 @@
 	{%- if is_incremental() -%}
 		(
 	{%- endif -%}
-	_TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[0] }}) AND FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[1] }})
-	{%- if is_incremental() -%}
-		OR _TABLE_SUFFIX LIKE 'intraday%' )
-	{%- endif -%}	
+  REPLACE(_TABLE_SUFFIX, 'intraday_', '') BETWEEN FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[0] }}) AND FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[1] }})
 {%- endmacro -%}
 
 {%- macro analyticsStartEndTimestampsTuple() -%}
