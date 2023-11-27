@@ -54,7 +54,7 @@ WITH  custom_install_event AS (
     FROM fb_install_event as fb
     FULL OUTER JOIN ob_install_event as ob ON fb.user_pseudo_id = ob.user_pseudo_id
     FULL OUTER JOIN custom_install_event as custom ON fb.user_pseudo_id = custom.user_pseudo_id
-    FULL OUTER JOIN user_pseudo_id_to_user_id as users ON COALESCE(fb.user_pseudo_id, ob.user_pseudo_id, custom.user_pseudo_id) = users.user_pseudo_id
+    LEFT JOIN user_pseudo_id_to_user_id as users ON COALESCE(fb.user_pseudo_id, ob.user_pseudo_id, custom.user_pseudo_id) = users.user_pseudo_id
     WHERE True 
 )
 -- SELECT  COUNT(1) , COUNT(DISTINCT(user_pseudo_id))
