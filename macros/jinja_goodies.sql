@@ -1,7 +1,11 @@
 {%- macro list_map_and_add_prefix(list, prefix) -%}
 {%- set res = [] %}
 {%- for elem in list -%}
+  {%- if elem is none -%}
+    {%- set _ = res.append("NULL") -%}
+  {%- else -%}
     {%- set _ = res.append(prefix ~ elem) -%}
+  {%- endif -%}
 {%- endfor -%}
 {{ return(res) }}
 {%- endmacro -%}
@@ -9,7 +13,11 @@
 {%- macro list_map_and_add_suffix(list, suffix) -%}
 {%- set res = [] %}
 {%- for elem in list -%}
+  {%- if elem is none -%}
+    {%- set _ = res.append("NULL") -%}
+  {%- else -%}
     {%- set _ = res.append(elem ~ suffix) -%}
+  {%- endif -%}
 {%- endfor -%}
 {{ return(res) }}
 {%- endmacro -%}

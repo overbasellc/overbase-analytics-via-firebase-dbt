@@ -57,7 +57,24 @@ SELECT    event_timestamp as event_ts
         , exceptions as android_exceptions
         , errors as ios_non_fatal
         , threads
-        , unity_metadata
+        , STRUCT<unity_version STRING, debug_build BOOLEAN, processor_type STRING, processor_count INTEGER, processor_frequency INTEGER, system_memory_size INTEGER, graphics_memory_size INTEGER, graphics_device_id INTEGER, graphics_device_vendor_id INTEGER, graphics_device_name STRING, graphics_device_vendor STRING, graphics_device_version STRING, graphics_device_type STRING, graphics_shader_level INTEGER, graphics_render_target_count INTEGER, graphics_copy_texture_support STRING, graphics_max_texture_size INTEGER, screen_size STRING, screen_dpi FLOAT64, screen_refresh_rate INTEGER, processor_frequency_mhz INTEGER, system_memory_size_mb INTEGER, graphics_memory_size_mb INTEGER, screen_size_px STRING, screen_refresh_rate_hz INTEGER, screen_resolution_dpi STRING>(
+          {#  it has a short form of 20 columns (iOS REALTIME only) and a long form of 26 columns (Android historic, Android realtime & iOS historic )
+          20:unity_version STRING,debug_build BOOLEAN,processor_type STRING,processor_count INTEGER,processor_frequency_mhz INTEGER,system_memory_size_mb INTEGER,graphics_memory_size_mb INTEGER,graphics_device_id INTEGER,graphics_device_vendor_id INTEGER,graphics_device_name STRING,graphics_device_vendor STRING,graphics_device_version STRING,graphics_device_type STRING,graphics_shader_level INTEGER,graphics_render_target_count INTEGER,graphics_copy_texture_support STRING,graphics_max_texture_size INTEGER,screen_size_px STRING,screen_refresh_rate_hz INTEGER,screen_resolution_dpi STRING,
+          sometimes it's processor_frequency_mhz 
+          26: unity_version STRING, debug_build BOOLEAN, processor_type STRING, processor_count INTEGER, processor_frequency INTEGER, system_memory_size INTEGER, graphics_memory_size INTEGER, graphics_device_id INTEGER, graphics_device_vendor_id INTEGER, graphics_device_name STRING, graphics_device_vendor STRING, graphics_device_version STRING, graphics_device_type STRING, graphics_shader_level INTEGER, graphics_render_target_count INTEGER, graphics_copy_texture_support STRING, graphics_max_texture_size INTEGER, screen_size STRING, screen_dpi FLOAT, screen_refresh_rate INTEGER, processor_frequency_mhz INTEGER, system_memory_size_mb INTEGER, graphics_memory_size_mb INTEGER, screen_size_px STRING, screen_refresh_rate_hz INTEGER, screen_resolution_dpi STRING
+          Differences:
+             + processor_frequency (but both also have processor_frequency_mhz)
+             + system_memory_size (but both also have system_memory_size_mb)
+             + graphics_memory_size (but both also have graphics_memory_size_mb)
+             + screen_size
+             + screen_dpi
+             + screen_refresh_rate
+            Those values are NULLed for the time being
+          #}
+          {{ overbase_firebase.list_map_and_add_prefix([
+            "unity_version","debug_build","processor_type","processor_count",none,none,none,"graphics_device_id","graphics_device_vendor_id","graphics_device_name","graphics_device_vendor","graphics_device_version","graphics_device_type","graphics_shader_level","graphics_render_target_count","graphics_copy_texture_support","graphics_max_texture_size",none,none,none,"processor_frequency_mhz","system_memory_size_mb","graphics_memory_size_mb","screen_size_px","screen_refresh_rate_hz","screen_resolution_dpi"
+            ], "unity_metadata." )| join(", ") }}
+          ) AS unity_metadata
         , COUNT(1) OVER (PARTITION BY installation_uuid, event_id, variant_id) as duplicates_cnt
 FROM {{ source("firebase_crashlytics", "events") }}  as events
 WHERE True 
