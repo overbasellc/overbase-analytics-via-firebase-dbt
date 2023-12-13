@@ -22,15 +22,15 @@
     {# ob_ui_view_shown & ob_ui_button_tapped #}
     {%- set uiEventNameFilters = ["ob_ui_view_shown", "ob_ui_button_tapped", "ui_view_shown", "ui_button_tapped"] -%}
     {%- set builtin_parameters = [ 
-            {"key_name":"view_name", "data_type":"STRING", "rollup_type":"dimension"} 
-           ,{"key_name":"view_type", "data_type":"STRING", "rollup_type":"alsoForceNullDimension", "force_null_dimension_event_name_filter": uiEventNameFilters}
-           ,{"key_name":"parent_view_name", "data_type":"STRING", "rollup_type":"dimension"}
-           ,{"key_name":"parent_view_type", "data_type":"STRING", "rollup_type":"alsoForceNullDimension",  "force_null_dimension_event_name_filter": uiEventNameFilters}
+            {"key_name":"view_name", "data_type":"STRING", "rollup_type":"dimension", "event_name_filter": uiEventNameFilters, "extract_transformation": "LOWER(TRIM(##))"} 
+           ,{"key_name":"view_type", "data_type":"STRING", "rollup_type":"alsoForceNullDimension", "force_null_dimension_event_name_filter": uiEventNameFilters,  "extract_transformation": "LOWER(TRIM(##))"}
+           ,{"key_name":"parent_view_name", "data_type":"STRING", "rollup_type":"dimension", "event_name_filter": uiEventNameFilters, "extract_transformation": "LOWER(TRIM(##))"}
+           ,{"key_name":"parent_view_type", "data_type":"STRING", "rollup_type":"alsoForceNullDimension",  "force_null_dimension_event_name_filter": uiEventNameFilters,  "extract_transformation": "LOWER(TRIM(##))"}
     ]%}
     {#  ob_ui_button_tapped #}
     {% set builtin_parameters = builtin_parameters + [
-            {"key_name":"button_name", "data_type":"STRING", "rollup_type":"dimension"} 
-           ,{"key_name":"button_extra", "data_type":"STRING", "rollup_type":"dimension"} 
+            {"key_name":"button_name", "data_type":"STRING", "rollup_type":"dimension", "event_name_filter": uiEventNameFilters, "extract_transformation": "LOWER(TRIM(##))"} 
+           ,{"key_name":"button_extra", "data_type":"STRING", "rollup_type":"dimension","event_name_filter": uiEventNameFilters, "extract_transformation": "LOWER(TRIM(##))"} 
     ]%}
     {# ob_error_server_% #}
     {% set builtin_parameters = builtin_parameters + [
@@ -207,11 +207,11 @@
 {% endmacro %}
 
 
-{# returns an tuple of (TYPE of said value, how to extract value) 
+{# returns a tuple of (TYPE of said value, how to extract value) 
     ('STRING', 'LOWER(value.string_value)')
 #}
 {% macro get_extra_parameter_types(parameter_name, data_type) %}
-    {% set data_type_to_value = {'string' : ['STRING', 'LOWER(value.string_value)'], 'int':['INT64', 'value.int_value'], 'double':['DOUBLE', 'value.double_value']  }%}
+    {% set data_type_to_value = {'string' : ['STRING', 'value.string_value'], 'int':['INT64', 'value.int_value'], 'double':['DOUBLE', 'value.double_value']  }%}
     {%- if not data_type in  ['string','int','double']  -%}
         {{ exceptions.raise_compiler_error(" data type '" + data_type + "' not supported (only string, int & double are supported) for custom parameter named'" + parameter_name + "'" ) }}
     {%- endif %}
@@ -219,11 +219,11 @@
     {{ return( (res[0], res[1]) ) }}
 {% endmacro %}
 
-{# returns an tuple of (TYPE of said value, how to extract value) 
+{# returns a tuple of (TYPE of said value, how to extract value) 
     ('STRING', 'LOWER(value.string_value)')
 #}
 {% macro get_extra_parameter_types_crashlytics(parameter_name, data_type) %}
-    {% set data_type_to_value = {'string' : ['STRING', 'LOWER(value)'] }%}
+    {% set data_type_to_value = {'string' : ['STRING', 'value'] }%}
     {%- if not data_type in  ['string']  -%}
         {{ exceptions.raise_compiler_error(" data type '" + data_type + "' not supported (only string is supported) for custom crashlytics key named'" + parameter_name + "'" ) }}
     {%- endif %}
