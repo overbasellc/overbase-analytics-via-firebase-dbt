@@ -25,7 +25,7 @@
 
 {%- macro analyticsStartEndTimestampsTuple() -%}
 	{%- if is_incremental() -%}
-		{%- set tsStart = "TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL " ~ var('OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS', "5")  ~ " DAY)" -%}
+		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS', "5")  ~ " DAY)" -%}
 		{%- set tsEnd = "TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY))" -%}
 		{{ return((tsStart, tsEnd)) }}
 	{%- else -%}
@@ -42,7 +42,7 @@
 
 {%- macro crashlyticsStartEndTimestampsTuple() -%}
 	{%- if is_incremental() -%}
-		{%- set tsStart = "TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL " ~ var('OVERBASE:FIREBASE_CRASHLYTICS_DEFAULT_INCREMENTAL_DAYS', "5")  ~ " DAY)" -%}
+		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_CRASHLYTICS_DEFAULT_INCREMENTAL_DAYS', "5")  ~ " DAY)" -%}
 		{%- set tsEnd = "TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY))" -%}
 		{{ return((tsStart, tsEnd)) }}
 	{%- else -%}
