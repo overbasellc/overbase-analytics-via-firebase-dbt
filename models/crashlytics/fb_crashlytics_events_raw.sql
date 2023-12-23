@@ -79,6 +79,6 @@ SELECT    event_timestamp as event_ts
         , COUNT(1) OVER (PARTITION BY installation_uuid, event_id, variant_id) as duplicates_cnt
 FROM {{ source("firebase_crashlytics", "events") }}  as events
 WHERE True 
-AND {{ overbase_firebase.crashlyticsDateFilterFor("event_date") }}
+AND {{ overbase_firebase.crashlyticsTSFilterFor("event_timestamp") }}
 QUALIFY ROW_NUMBER() OVER (PARTITION BY installation_uuid, event_id, variant_id ORDER BY received_ts) = 1
 

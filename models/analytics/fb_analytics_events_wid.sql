@@ -60,8 +60,9 @@ WITH data as (
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
     WHERE {{ overbase_firebase.analyticsDateFilterFor('events.event_date') }}
-    AND installs.event_ts >= TIMESTAMP('2022-01-01')
-    -- TODO: max join on installs ?
+    AND installs.event_date >= TIMESTAMP('2020-01-01')
+    -- TODO: max join on installs ? Have an LTV_MAX variable (e.g. 2 years)
+    -- and then join on installs via installs > EVENT_DATE - 2 years?
     GROUP BY 1,2,3,4 {% for n in range(5, 5 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 

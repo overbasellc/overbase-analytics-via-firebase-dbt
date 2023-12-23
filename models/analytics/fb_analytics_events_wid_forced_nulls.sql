@@ -63,7 +63,7 @@ WITH data as (
     WHERE {{ overbase_firebase.analyticsDateFilterFor('events.event_date') }}
     {%- set eventNamesToLookFor = set(overbase_firebase.flatten_list_of_lists(overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() | map(attribute="force_null_dimension_event_name_filter") | list)) %}
     AND {{ overbase_firebase.makeListIntoSQLInFilter("events.event_name", eventNamesToLookFor| list) }}
-    AND installs.event_ts >= TIMESTAMP('2022-01-01')
+    AND installs.event_date >= TIMESTAMP('2020-01-01')
     -- TODO: max join on installs ?
     GROUP BY 1,2,3,4 {% for n in range(5, 5 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
