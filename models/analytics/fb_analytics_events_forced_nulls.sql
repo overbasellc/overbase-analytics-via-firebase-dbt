@@ -41,7 +41,7 @@ WITH data as (
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
-    WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     {%- set eventNamesToLookFor = set(overbase_firebase.flatten_list_of_lists(overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() | map(attribute="force_null_dimension_event_name_filter") | list)) %}
     AND {{ overbase_firebase.makeListIntoSQLInFilter("event_name", eventNamesToLookFor| list) }}
     GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}

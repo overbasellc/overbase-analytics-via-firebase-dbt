@@ -32,7 +32,7 @@ WITH data as (
             , COUNT(DISTINCT(user_pseudo_id)) as users
 
     FROM {{ ref("fb_analytics_installs_raw") }}
-    WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     GROUP BY 1,2,3 {% for n in range(4, 4 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT  event_date

@@ -26,7 +26,7 @@ WITH data as (
             , COUNT(1) as cnt -- same as COUNT(DISTINCT(event_id))
             , COUNT(DISTINCT(crashlytics_user_pseudo_id)) as users
     FROM {{ ref("fb_crashlytics_events_raw") }}
-    WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     GROUP BY 1 {% for n in range(2, 2 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT event_date

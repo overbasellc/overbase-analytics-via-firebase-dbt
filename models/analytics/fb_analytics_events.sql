@@ -41,7 +41,7 @@ WITH data as (
             {{ ", " if custom_summed_metrics|length > 0 else "" }} {{ custom_summed_metrics |map(attribute='agg')|join(", ") }}
 
     FROM {{ ref("fb_analytics_events_raw") }}
-    WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
     GROUP BY 1,2 {% for n in range(3, 3 + eventDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}
 )
 SELECT event_date

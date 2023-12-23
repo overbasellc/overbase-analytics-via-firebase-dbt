@@ -59,7 +59,7 @@ WITH data as (
 
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
-    WHERE {{ overbase_firebase.analyticsTSFilterFor('events.event_ts') }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('events.event_date') }}
     AND installs.event_ts >= TIMESTAMP('2022-01-01')
     -- TODO: max join on installs ?
     GROUP BY 1,2,3,4 {% for n in range(5, 5 + eventDimensionsUnnestedCount + installedDatesDimensionsUnnestedCount + installDimensionsUnnestedCount) -%} ,{{ n }} {%- endfor %}

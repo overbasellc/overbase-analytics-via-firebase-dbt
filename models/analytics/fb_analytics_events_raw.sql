@@ -2,8 +2,8 @@
 {{ config(
     materialized='incremental',
     partition_by={
-      "field": "event_ts",
-      "data_type": "timestamp",
+      "field": "event_date",
+      "data_type": "date",
       "granularity": "day"
      },
      incremental_strategy = 'insert_overwrite',
@@ -13,6 +13,7 @@
 
 -- https://support.google.com/firebase/answer/7029846
 SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
+        , DATE(TIMESTAMP_MICROS(event_timestamp)) as event_date
         , TIMESTAMP_MICROS(user_first_touch_timestamp) as install_ts
         , {{ overbase_firebase.calculate_age_between_timestamps("TIMESTAMP_MICROS(event_timestamp)", "TIMESTAMP_MICROS(user_first_touch_timestamp)") }} as install_age
         , LOWER(user_pseudo_id) as user_pseudo_id
@@ -35,7 +36,7 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , {{ overbase_firebase.generate_struct_for_raw_event_parameters() }} as event_parameters
         , user_properties as user_properties_raw
         , event_params as event_parameters_raw
-        , STRUCT<city STRING , firebase_value STRING, iso_country_name STRING , iso_country_alpha_2 STRING, continent STRING, subcontinent STRING, region STRING, metro STRING>(
+        , STRUCT<city STRING , country_firebase_value STRING, iso_country_name STRING , iso_country_alpha_2 STRING, continent STRING, subcontinent STRING, region STRING, metro STRING>(
             geo.city, geo.country, country_codes.name, country_codes.alpha_2, geo.continent, geo.sub_continent, geo.region, geo.metro
         ) as geo
         -- for iOS it's ../Apple/iPhone 14/NULL/iPhone14,7

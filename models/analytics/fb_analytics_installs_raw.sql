@@ -1,8 +1,8 @@
 {{ config(
     materialized='incremental',
     partition_by={
-      "field": "event_ts",
-      "data_type": "timestamp",
+      "field": "event_date",
+      "data_type": "date",
       "granularity": "day"
      },
     incremental_strategy = 'insert_overwrite',
@@ -14,7 +14,7 @@
 
  
 WITH  custom_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
         AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "")|length > 0 -%}
                 event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "") }}'
             {%- else -%}
@@ -23,16 +23,16 @@ WITH  custom_install_event AS (
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , ob_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'ob_first_open' AND {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'ob_first_open' AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , fb_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'first_open' AND {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'first_open' AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , user_pseudo_id_to_user_id AS (
         SELECT user_pseudo_id, user_id
-        FROM {{ ref('fb_analytics_events_raw') }} WHERE user_id IS NOT NULL AND {{ overbase_firebase.analyticsTSFilterFor('event_ts') }}
+        FROM {{ ref('fb_analytics_events_raw') }} WHERE user_id IS NOT NULL AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 

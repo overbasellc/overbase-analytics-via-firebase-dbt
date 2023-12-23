@@ -60,7 +60,7 @@ WITH data as (
 
     FROM {{ ref("fb_analytics_events_raw") }} as events
     LEFT JOIN {{ ref("fb_analytics_installs_raw") }} as installs ON events.user_pseudo_id = installs.user_pseudo_id
-    WHERE {{ overbase_firebase.analyticsTSFilterFor('events.event_ts') }}
+    WHERE {{ overbase_firebase.analyticsDateFilterFor('events.event_date') }}
     {%- set eventNamesToLookFor = set(overbase_firebase.flatten_list_of_lists(overbase_firebase.get_event_parameter_tuples_for_rollup_alsoNullDimensions() | map(attribute="force_null_dimension_event_name_filter") | list)) %}
     AND {{ overbase_firebase.makeListIntoSQLInFilter("events.event_name", eventNamesToLookFor| list) }}
     AND installs.event_ts >= TIMESTAMP('2022-01-01')
