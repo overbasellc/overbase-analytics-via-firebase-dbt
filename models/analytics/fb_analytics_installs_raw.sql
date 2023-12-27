@@ -16,33 +16,33 @@
 WITH  custom_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
         WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-        AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "")|length > 0 -%}
-                event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "") }}'
-            {%- else -%}
-                False
-            {%- endif %}
-        AND TIMESTAMP_SUB(event_ts, INTERVAL 1 DAY) <= install_ts
+          AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "")|length > 0 -%}
+                  event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "") }}'
+              {%- else -%}
+                  False
+              {%- endif %}
+          AND event_ts BETWEEN install_ts AND TIMESTAMP_ADD(install_ts, INTERVAL 1 DAY)
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , ob_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
         WHERE event_name = 'ob_first_open' 
           AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-          AND TIMESTAMP_SUB(event_ts, INTERVAL 1 DAY) <= install_ts
+          AND event_ts BETWEEN install_ts AND TIMESTAMP_ADD(install_ts, INTERVAL 1 DAY)
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , fb_install_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
         WHERE event_name = 'first_open' 
           AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-          AND TIMESTAMP_SUB(event_ts, INTERVAL 1 DAY) <= install_ts
+          AND event_ts BETWEEN install_ts AND TIMESTAMP_ADD(install_ts, INTERVAL 1 DAY)
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , any_first_event AS (
         SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
         WHERE True 
           AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
-          AND event_ts >= install_ts
+          AND event_ts BETWEEN install_ts AND TIMESTAMP_ADD(install_ts, INTERVAL 1 DAY)
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , user_pseudo_id_to_user_id AS (
