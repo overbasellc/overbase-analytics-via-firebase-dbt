@@ -14,20 +14,35 @@
 
  
 WITH  custom_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
+        WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
         AND {% if var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "")|length > 0 -%}
                 event_name = '{{ var("OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT", "") }}'
             {%- else -%}
                 False
             {%- endif %}
+        AND TIMESTAMP_SUB(event_ts, INTERVAL 1 DAY) <= install_ts
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , ob_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'ob_first_open' AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
+        WHERE event_name = 'ob_first_open' 
+          AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+          AND TIMESTAMP_SUB(event_ts, INTERVAL 1 DAY) <= install_ts
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , fb_install_event AS (
-        SELECT * FROM {{ ref('fb_analytics_events_raw') }} WHERE event_name = 'first_open' AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
+        WHERE event_name = 'first_open' 
+          AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+          AND TIMESTAMP_SUB(event_ts, INTERVAL 1 DAY) <= install_ts
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
+)
+, any_first_event AS (
+        SELECT * FROM {{ ref('fb_analytics_events_raw') }} 
+        WHERE True 
+          AND {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+          AND event_ts >= install_ts
         QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 )
 , user_pseudo_id_to_user_id AS (
@@ -44,16 +59,17 @@ WITH  custom_install_event AS (
     {%- if column.name == 'user_id' -%}
         {%- set _ = columnsInSelect.append("users.user_id") -%}
     {%- else -%}
-        {%- set _ = columnsInSelect.append("COALESCE(custom." ~ column.name ~ ", ob." ~ column.name ~ ", fb." ~ column.name ~ ") as " ~ column.name) -%}
+        {%- set _ = columnsInSelect.append("COALESCE(custom." ~ column.name ~ ", ob." ~ column.name ~ ", fb." ~ column.name ~ ", anyFirstEvent." ~ column.name ~ ") as " ~ column.name) -%}
     {%- endif -%}
 {%- endfor %}
 
 
 , data as (
     SELECT   {{ columnsInSelect | join("\n           , ") }} 
-    FROM fb_install_event as fb
-    FULL OUTER JOIN ob_install_event as ob ON fb.user_pseudo_id = ob.user_pseudo_id
-    FULL OUTER JOIN custom_install_event as custom ON fb.user_pseudo_id = custom.user_pseudo_id
+    FROM any_first_event as anyFirstEvent
+    FULL OUTER JOIN fb_install_event as fb ON anyFirstEvent.user_pseudo_id = fb.user_pseudo_id
+    FULL OUTER JOIN ob_install_event as ob ON anyFirstEvent.user_pseudo_id = ob.user_pseudo_id
+    FULL OUTER JOIN custom_install_event as custom ON anyFirstEvent.user_pseudo_id = custom.user_pseudo_id
     LEFT JOIN user_pseudo_id_to_user_id as users ON COALESCE(fb.user_pseudo_id, ob.user_pseudo_id, custom.user_pseudo_id) = users.user_pseudo_id
     WHERE True 
 )
