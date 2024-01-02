@@ -42,7 +42,8 @@
 {%- for tuple in overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
     {%- set mrt = tuple['metric_rollup_transformation'] -%}
     {%- set sfn = tuple['struct_field_name'] -%}
-    {%- set _ = custom_summed_metrics.append({"agg": mrt|replace("##", "events.event_parameters." ~ sfn) ~ " as cm_" ~ sfn, "alias": "cm_" ~ sfn}) -%}
+    {%- set rsfn = tuple['rollup_struct_field_name'] -%}
+    {%- set _ = custom_summed_metrics.append({"agg": mrt|replace("##", "event_parameters." ~ sfn) ~ " as " ~ rsfn, "alias": rsfn}) -%}
 {%- endfor -%}
 
 {%- set miniColumnsToAlsoNil = [] -%}

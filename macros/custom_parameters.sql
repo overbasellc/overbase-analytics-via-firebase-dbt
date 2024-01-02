@@ -62,10 +62,10 @@
 
 {# e.g. [event_parameters.call_id_string (a raw only custom property), event_parameters.quantity_int (a rollup_metric custom property)] #}
 {%- macro get_mini_columns_to_ignore_when_rolling_up() -%}
-    {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_for_raw_only() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
+    {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.get_event_parameter_tuples_that_stay_only_in_raw() + overbase_firebase.get_event_parameter_tuples_for_rollup_metrics() -%}
     {%- set eventParamsToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(eventParamsToIgnoreInGroupBy|map(attribute='struct_field_name')|list, 'event_parameters.' ) -%}
 
-    {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_for_raw_only() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
+    {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.get_user_property_tuples_that_stay_only_in_raw() + overbase_firebase.get_user_property_tuples_for_rollup_metrics() -%}
     {%- set userPropertiesToIgnoreInGroupBy = overbase_firebase.list_map_and_add_prefix(userPropertiesToIgnoreInGroupBy|map(attribute='struct_field_name')|list, 'user_properties.' ) -%}
 
     {%- set miniColumnsToIgnoreInGroupBy = eventParamsToIgnoreInGroupBy + userPropertiesToIgnoreInGroupBy -%}
@@ -109,7 +109,7 @@
 {%- do return(result) -%}
 {%- endmacro %}
 
-{%- macro get_user_property_tuples_for_raw_only() -%}
+{%- macro get_user_property_tuples_that_stay_only_in_raw() -%}
 {%- set result  = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', 'raw') | list -%}
 {%- set result2 = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'equalto', '') | list -%}
 {%- set result3 = overbase_firebase.get_user_property_tuples_all() | selectattr('rollup_type', 'undefined') | list -%}
@@ -118,8 +118,9 @@
 
 
 {%- macro get_event_parameter_tuples_for_rollup_metrics() -%}
-{%- set result = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'metric') | list -%}
-{%- do return(result) -%}
+{%- set result1 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'metric') | list -%}
+{%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'metricOnly') | list -%}
+{%- do return(result1 + result2) -%}
 {%- endmacro %}
 
 {%- macro get_event_parameter_tuples_for_rollup_dimensions() -%}
@@ -133,7 +134,13 @@
 {%- do return(result) -%}
 {%- endmacro %}
 
-{%- macro get_event_parameter_tuples_for_raw_only() -%}
+{%- macro get_event_parameter_tuples_for_raw() -%}
+{# The 'metrincOnly' assume there is already a raw extract for it #}
+{%- set result  = overbase_firebase.get_event_parameter_tuples_all() | rejectattr('rollup_type', 'equalto', 'metricOnly') | list -%}
+{%- do return(result) -%}
+{%- endmacro %}
+
+{%- macro get_event_parameter_tuples_that_stay_only_in_raw() -%}
 {%- set result  = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', 'raw') | list -%}
 {%- set result2 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'equalto', '') | list -%}
 {%- set result3 = overbase_firebase.get_event_parameter_tuples_all() | selectattr('rollup_type', 'undefined') | list -%}
@@ -173,6 +180,19 @@
         {%- if struct_field_name is not defined -%}
             {%- set struct_field_name = key_name ~ "_" ~ data_type.lower() -%}
         {%- endif -%}
+
+        {%- set rollup_struct_field_name = parameterDict['rollup_struct_field_name'] -%}
+        {%- if rollup_struct_field_name is not defined and metric_rollup_transformation is defined -%}
+            {%- set metric_rollup_transformation_function = metric_rollup_transformation.split('(')[0] | lower %}
+            {%- if metric_rollup_transformation_function is defined -%}
+              {%- set rollup_struct_field_name = "cm_" ~ struct_field_name ~ "_" ~ metric_rollup_transformation_function -%}
+            {%- else -%}
+              {%- set rollup_struct_field_name = "cm_" ~ struct_field_name -%}
+            {%- endif -%} 
+        {%- endif -%}
+
+
+
         {%- set output_data_type = parameterDict['output_data_type'] -%}
         {%- if output_data_type is not defined -%}
             {%- set output_data_type = bqTypeAndHowToExtractTuple[0] -%}
@@ -198,6 +218,7 @@
                                    "extract_transformation": extract_transformation, 
                                    "metric_rollup_transformation": metric_rollup_transformation, 
                                    "struct_field_name": struct_field_name,
+                                   "rollup_struct_field_name": rollup_struct_field_name,
                                    "output_data_type": output_data_type,
                                    "event_name_filter": event_name_filter,
                                    "force_null_dimension_event_name_filter": force_null_dimension_event_name_filter
@@ -235,8 +256,8 @@
 {%- macro validate_parameter_tuples(tuples) -%}
     {%- for tuple in tuples -%}
         {%- set rollupType = tuple['rollup_type'] -%}
-        {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'alsoForceNullDimension', 'metric'] -%}
-                {{ exceptions.raise_compiler_error(" 'rollup_type' '" + rollupType + "' not supported (only 'raw', 'dimension', 'alsoForceNullDimension', 'metric' supported). Looking at parameter:" + tuple['key_name']) }}
+        {%- if rollupType|length > 0  and rollupType not in ['raw', 'dimension', 'alsoForceNullDimension', 'metric', 'metricOnly'] -%}
+                {{ exceptions.raise_compiler_error(" 'rollup_type' '" + rollupType + "' not supported (only 'raw', 'dimension', 'alsoForceNullDimension', 'metric', 'metricOnly' supported). Looking at parameter:" + tuple['key_name']) }}
         {%- endif -%}
     {%- endfor -%}
 {%- endmacro -%}

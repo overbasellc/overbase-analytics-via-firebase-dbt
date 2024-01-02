@@ -1,5 +1,5 @@
 name: 'overbase_firebase'
-version: '0.7.5'
+version: '0.8.0'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
@@ -52,28 +52,39 @@ vars:
     # "OVERBASE:OB_DIMENSION_TO_EXCLUDE_IN_ROLLUPS":  # optional, what built-in OB dimensions to exclude from bubbling up in the rollups (& save the row count)
     #   - geo.city
     #   - geo.metro
-    # "OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "float", "double"
+    # "OVERBASE:CUSTOM_USER_PROPERTIES":  # data_types : "string", "int", "double"
           # - { key_name: up_just_in_raw, data_type: 'string'} 
           # - { key_name: first_open_time, data_type: 'int'} 
           # - { key_name: poorly_set_variable, data_type: 'double'}
-    # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "float", "double"
+    # "OVERBASE:CUSTOM_EVENT_PARAMETERS":  # data_types : "string", "int", "double"
           # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric'}
-          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int_sum2' }
-          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', struct_field_name: 'quantity_avg' }
+          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int2' }
+          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', struct_field_name: 'quantity_int3', rollup_struct_field_name: 'cm_quantity_avg' }
+          # - { key_name: quantity, data_type: 'int',  rollup_type: 'metricOnly', metric_rollup_transformation: 'MIN(##)', struct_field_name: 'quantity_int', rollup_struct_field_name: 'cm_quantity_int_min' }
           # - { key_name: myDimension, data_type: 'string',  rollup_type: 'alsoForceNullDimension'}
           # - { key_name: server_sent_ts, data_type: 'string',  rollup_type: 'dimension', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', struct_field_name: 'server_sent_ts' }
       # key_name: server_sent_ts
       # data_type: string
-      # rollup_type: metric/dimension/raw/alsoForceNullDimension
+      # rollup_type: raw/dimension/alsoForceNullDimension/metric/metricOnly
+        # raw: it will just be extracted and kep in fb_analytics_events_raw. It won't be propagated upwards
+        # dimension: raw + it will propagated upwards as a dimension
+        # alsoForceNullDimension: dimension + it will be also propagated in the "forced_nulls" table with this dimension set to NULL
+        # metric: raw + it will be propagated upwards as a metric
+        # metricOnly: no raw, it assumes there is already a raw and will use that
+
       # metric_rollup_transformatin: 'SUM(##)' # optional, default is SUM()
       # struct_field_name: quantity_ts # optional; default is key_name + '_' + data_type
+      # rollup_struct_field_name: cm_quantity_sum #optional; default is cm_ + struct_field_name + metric_rollup_transformation function 
       # extract_transformation: "PARSE_DATE('%Y%m%d', ##)" # optional, becaomes PARSE_DATE('%Y%m%d', value.string_value); default is just the int/string value
       # output_data_type: TIMESTAMP # optional, default is the same as what was extracted, e.g. string
       # event_name_filter: ["notification_received"] # optional, default is to extract for all events
       # force_null_dimension_event_name_filter: [] #, optional, default is to extract for all events
+      # by default, metrics get aggregated as "cm_foo_int". So in the raw we have "foo_int", in the rollup we have "cm_foo_int". 
+      # Changing the "struct_field_name" will change both.
     #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric'}
-    #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int_sum2' }
+    #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int2' }
     #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metric', metric_rollup_transformation: 'AVG(##)', struct_field_name: 'quantity_avg' }
+    #       - { key_name: quantity, data_type: 'int',  rollup_type: 'metricOnly', metric_rollup_transformation: 'SUM(##)', struct_field_name: 'quantity_int_sum2' }
           # - { key_name: server_sent_ts, data_type: 'string',  rollup_type: 'raw', extract_transformation: 'TIMESTAMP(##)', output_data_type: 'TIMESTAMP', struct_field_name: 'server_sent_ts' }
     # "OVERBASE:CUSTOM_CRASHLYTICS_KEYS":  # data_types : "string", "int", "float", "double"
           # - { key_name: network_state, data_type: 'string'}
