@@ -43,7 +43,7 @@
     {%- set mrt = tuple['metric_rollup_transformation'] -%}
     {%- set sfn = tuple['struct_field_name'] -%}
     {%- set rsfn = tuple['rollup_struct_field_name'] -%}
-    {%- set _ = custom_summed_metrics.append({"agg": mrt|replace("##", "event_parameters." ~ sfn) ~ " as " ~ rsfn, "alias": rsfn}) -%}
+    {%- set _ = custom_summed_metrics.append({"agg": mrt|replace("##", "events.event_parameters." ~ sfn) ~ " as " ~ rsfn, "alias": rsfn}) -%}
 {%- endfor -%}
 
 {%- set miniColumnsToAlsoNil = [] -%}
