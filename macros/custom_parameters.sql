@@ -196,6 +196,12 @@
         {%- set output_data_type = parameterDict['output_data_type'] -%}
         {%- if output_data_type is not defined -%}
             {%- set output_data_type = bqTypeAndHowToExtractTuple[0] -%}
+        {%- else -%}
+            {%- if analyticsOrCrashlytics == "analytics" -%}
+              {%- set output_data_type = overbase_firebase.get_extra_parameter_types(parameterDict['key_name'], output_data_type.lower())[0] -%}
+            {%- else -%}
+              {%- set output_data_type = overbase_firebase.get_extra_parameter_types_crashlytics(parameterDict['key_name'], output_data_type.lower())[0] -%}
+            {%- endif -%}
         {%- endif -%}
 
         {%- set event_name_filter = parameterDict['event_name_filter'] -%}
