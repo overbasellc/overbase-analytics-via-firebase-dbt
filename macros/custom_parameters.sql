@@ -239,7 +239,7 @@
 #}
 {% macro get_extra_parameter_types(parameter_name, data_type) %}
     {% set data_type_to_value = {'string' : ['STRING', 'value.string_value'], 'int':['INT64', 'value.int_value'], 'double':['FLOAT64', 'value.double_value'], 'bool':['BOOL', 'value.int_value']  }%}
-    {%- if not data_type in  ['string','int','double']  -%}
+    {%- if not data_type in  ['string','int','double', 'bool']  -%}
         {{ exceptions.raise_compiler_error(" data type '" + data_type + "' not supported (only string, int & double are supported) for custom parameter named'" + parameter_name + "'" ) }}
     {%- endif %}
     {%- set res = data_type_to_value[data_type.lower()] %}
