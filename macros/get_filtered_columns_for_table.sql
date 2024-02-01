@@ -17,16 +17,18 @@
     {%- set columnsToGroupBy = [] -%}
 
     {%- for column in columns -%}
-        {%- if columnsToFind == "*" or column.name in columnsToFindSet -%}
+        {%- set columnName = column.name | replace('`', '') -%}
+        {%- if columnsToFind == "*" or columnName in columnsToFindSet -%}
             {%- if not column["data_type"].startswith('STRUCT') -%}
-                {%- if column.name not in miniColumnsToIgnoreSet -%}
+                {%- if columnName not in miniColumnsToIgnoreSet -%}
                     {{ columnsToGroupBy.append(column) or "" }}
                     {% set _ = columnsUnnestedCount.append(1) %}
                 {%- endif -%}
             {%- else %}
                 {# remove the 'STRUCT<' prefix, then split by ' ' and get every other item, ie the mini column name  #}
-                {%- for structMiniColumn in column["data_type"][7:-1].split(' ')[::2] -%}
-                    {%- if column.name ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
+                {%- for structMiniColumnTmp in column["data_type"][7:-1].split(' ')[::2] -%}
+                    {%- set structMiniColumn = structMiniColumnTmp | replace('`', '') -%}
+                    {%- if columnName ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
                         {% set _ = columnsUnnestedCount.append(1) %}
                     {%- endif -%}
                 {%- endfor -%}

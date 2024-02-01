@@ -10,17 +10,20 @@
     {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
     {%- set miniColumnsToNilSet = set(miniColumnsToNil) -%}
     {%- for column in columns -%}
+        {%- set columnName = column["name"] | replace('`', '') -%}
+
         {%- if not column["data_type"].startswith('STRUCT') -%}
-            {%- set _ = result.append( (tablePrefix ~ column["name"], aliasPrefix ~ column["name"]) ) -%}
+            {%- set _ = result.append( (tablePrefix ~ columnName, aliasPrefix ~ columnName) ) -%}
         {%- else -%}
             {# remove the 'STRUCT<' prefix, then split by ' ' and get every other item, ie the mini column name  #}
             {# STRUCT<ob_view_name_string STRING, ob_view_type_string STRING -> ["ob_view_name_string", "STRING", "ob_view_type_string", "STRING"] #}
-            {%- for structMiniColumn in column["data_type"][7:-1].split(' ')[::2] -%}
-                {%- if column["name"] ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
-                    {%- if column["name"] ~ "." ~ structMiniColumn in miniColumnsToNil %}
-                        {%- set _ = result.append( ("'ob-forced-null'", aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
+            {%- for structMiniColumnTmp in column["data_type"][7:-1].split(' ')[::2] -%}
+                {%- set structMiniColumn = structMiniColumnTmp | replace('`', '') -%}
+                {%- if columnName ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet %}
+                    {%- if columnName ~ "." ~ structMiniColumn in miniColumnsToNil %}
+                        {%- set _ = result.append( ("'ob-forced-null'", aliasPrefix ~ columnName ~ "_" ~ structMiniColumn) ) -%}
                     {%- else -%}
-                        {%- set _ = result.append( (tablePrefix ~ column["name"] ~ "." ~ structMiniColumn, aliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) ) -%}
+                        {%- set _ = result.append( (tablePrefix ~ columnName ~ "." ~ structMiniColumn, aliasPrefix ~ columnName ~ "_" ~ structMiniColumn) ) -%}
                     {%- endif -%}
                 {%- endif -%}
             {%- endfor -%}
@@ -59,25 +62,29 @@ app_id
 {%- macro pack_minicolumns_into_structs_for_select(columns, miniColumnsToIgnore, unpackedAliasPrefix, packedAliasPrefix) -%}
     {%- set miniColumnsToIgnoreSet = set(miniColumnsToIgnore) -%}
     {%- for column in columns -%}
+        {%- set columnName = column["name"] | replace('`', '') -%}
+
         {%- if not column.data_type.startswith('STRUCT') %}
-            {{ ", " if not loop.first else "" }}{{ unpackedAliasPrefix ~ column["name"] }} AS {{ packedAliasPrefix ~ column["name"] }}
+            {{ ", " if not loop.first else "" }}{{ unpackedAliasPrefix ~ columnName }} AS {{ packedAliasPrefix ~ columnName }}
         {%- else -%}
             {#- ['ob_view_name STRING',] -#}
             {%- set structDefinitionDDLs = [] %}
-            {%- for structMiniColumnDDL in column["data_type"][7:-1].split(',') -%}
-                {% if column["name"] ~ "." ~ structMiniColumnDDL.strip().split(' ')[0] not in miniColumnsToIgnoreSet -%}
+            {%- for structMiniColumnDDLTmp in column["data_type"][7:-1].split(',') -%}
+                {%- set structMiniColumnDDL = structMiniColumnDDLTmp | replace('`', '') -%}
+                {% if columnName ~ "." ~ structMiniColumnDDL.strip().split(' ')[0] not in miniColumnsToIgnoreSet -%}
                     {%- set _ = structDefinitionDDLs.append(structMiniColumnDDL) -%}
                 {%- endif -%}
             {%- endfor %}
             {%- set structValues = [] %}
-            {% for structMiniColumn in column["data_type"][7:-1].split(' ')[::2] -%}
-                {% if column["name"] ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet -%}
-                     {%- set _ = structValues.append(unpackedAliasPrefix ~ column["name"] ~ "_" ~ structMiniColumn) -%}
+            {% for structMiniColumnTmp in column["data_type"][7:-1].split(' ')[::2] -%}
+                {%- set structMiniColumn = structMiniColumnTmp | replace('`', '') -%}
+                {% if columnName ~ "." ~ structMiniColumn not in miniColumnsToIgnoreSet -%}
+                     {%- set _ = structValues.append(unpackedAliasPrefix ~ columnName ~ "_" ~ structMiniColumn) -%}
                 {%- endif -%}
             {%- endfor -%}
             {{ ", " if not loop.first else "" }} STRUCT<{{ structDefinitionDDLs | join(", ") }}>(
                 {{ structValues | join(", ") }} 
-            ) as {{ packedAliasPrefix ~ column["name"] }}
+            ) as {{ packedAliasPrefix ~ columnName }}
         {%- endif -%}
     {%- endfor -%}
 {%- endmacro -%}
