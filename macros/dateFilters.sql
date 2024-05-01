@@ -1,31 +1,32 @@
-{%- macro analyticsDateFilterFor(dateField) -%}
-	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple() -%}
+{%- macro analyticsDateFilterFor(dateField,extend = 0) -%}
+	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple(extend = extend) -%}
 	{{ dateField }} BETWEEN DATE({{ startEndTSTuple[0] }}) AND DATE({{ startEndTSTuple[1] }})
 {%- endmacro -%}
 
-{%- macro crashlyticsDateFilterFor(dateField) -%}
-	{%- set startEndTSTuple = overbase_firebase.crashlyticsStartEndTimestampsTuple() -%}
+{%- macro crashlyticsDateFilterFor(dateField, extend = 0) -%}
+	{%- set startEndTSTuple = overbase_firebase.crashlyticsStartEndTimestampsTuple(extend=extend) -%}
 	{{ dateField }} BETWEEN DATE({{ startEndTSTuple[0] }}) AND DATE({{ startEndTSTuple[1] }})
 {%- endmacro -%}
 
-{%- macro analyticsTSFilterFor(tsField) -%}
-	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple() -%}
+{%- macro analyticsTSFilterFor(tsField, extend = 0) -%}
+	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple(extend=extend) -%}
 	{{ tsField }} BETWEEN {{ startEndTSTuple[0] }} AND {{ startEndTSTuple[1] }}	
 {%- endmacro -%}
 
-{%- macro crashlyticsTSFilterFor(tsField) -%}
-	{%- set startEndTSTuple = overbase_firebase.crashlyticsStartEndTimestampsTuple() -%}
+{%- macro crashlyticsTSFilterFor(tsField, extend = 0) -%}
+	{%- set startEndTSTuple = overbase_firebase.crashlyticsStartEndTimestampsTuple(extend=extend) -%}
 	{{ tsField }} BETWEEN {{ startEndTSTuple[0] }} AND {{ startEndTSTuple[1] }}	
 {%- endmacro -%}
 
-{%- macro analyticsTableSuffixFilter() -%}
-	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple() -%}
+{%- macro analyticsTableSuffixFilter(extend =0) -%}
+	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple(extend=extend + 1) -%}  {# extended by one day because TABLE_SUFFIX is not always UTC #}
   REPLACE(_TABLE_SUFFIX, 'intraday_', '') BETWEEN FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[0] }}) AND FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[1] }})
 {%- endmacro -%}
 
-{%- macro analyticsStartEndTimestampsTuple() -%}
+{%- macro analyticsStartEndTimestampsTuple(extend = 0) -%}
 	{%- if is_incremental() -%}
-		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS', "5")  ~ " DAY)" -%}
+        {%- set INCREMENTAL_DAYS =  5 + extend -%}
+		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS', INCREMENTAL_DAYS)  ~ " DAY)" -%}
 		{%- set tsEnd = "TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY))" -%}
 		{{ return((tsStart, tsEnd)) }}
 	{%- else -%}
@@ -40,9 +41,10 @@
 {%- endmacro -%}
 
 
-{%- macro crashlyticsStartEndTimestampsTuple() -%}
+{%- macro crashlyticsStartEndTimestampsTuple(extend = 0) -%}
 	{%- if is_incremental() -%}
-		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_CRASHLYTICS_DEFAULT_INCREMENTAL_DAYS', "5")  ~ " DAY)" -%}
+        {%- set INCREMENTAL_DAYS =  5 + extend -%}
+		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_CRASHLYTICS_DEFAULT_INCREMENTAL_DAYS',INCREMENTAL_DAYS)  ~ " DAY)" -%}
 		{%- set tsEnd = "TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY))" -%}
 		{{ return((tsStart, tsEnd)) }}
 	{%- else -%}
