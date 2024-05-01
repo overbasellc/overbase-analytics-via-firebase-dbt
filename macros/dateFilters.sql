@@ -19,7 +19,7 @@
 {%- endmacro -%}
 
 {%- macro analyticsTableSuffixFilter(extend =0) -%}
-	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple(extend=extend + 1) -%}
+	{%- set startEndTSTuple = overbase_firebase.analyticsStartEndTimestampsTuple(extend=extend + 1) -%}  {# extended by one day because TABLE_SUFFIX is not always UTC #}
   REPLACE(_TABLE_SUFFIX, 'intraday_', '') BETWEEN FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[0] }}) AND FORMAT_DATE('%Y%m%d', {{ startEndTSTuple[1] }})
 {%- endmacro -%}
 
