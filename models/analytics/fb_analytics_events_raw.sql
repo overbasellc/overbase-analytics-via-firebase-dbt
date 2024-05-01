@@ -70,6 +70,7 @@ LEFT JOIN {{ref('ob_iso_country')}} as language_region_codes -- some language ha
     ON LOWER(ARRAY_REVERSE(SPLIT(events.device.language,'-'))[SAFE_OFFSET(0)]) = language_region_codes.alpha_2
 
 WHERE True 
-AND {{ overbase_firebase.analyticsTableSuffixFilter() }}
+AND {{ overbase_firebase.analyticsTableSuffixFilter() }} -- already extended by 1 day compared to event_timestamp filter
+AND {{ overbase_firebase.analyticsDateFilterFor('DATE(TIMESTAMP_MICROS(event_timestamp))') }}
 
 QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, event_bundle_sequence_id, event_name, event_timestamp, event_previous_timestamp) = 1
