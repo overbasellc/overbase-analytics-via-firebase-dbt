@@ -25,8 +25,8 @@
 
 {%- macro analyticsStartEndTimestampsTuple(extend = 0) -%}
 	{%- if is_incremental() -%}
-        {%- set INCREMENTAL_DAYS =  5 + extend -%}
-		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~ var('OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS', INCREMENTAL_DAYS)  ~ " DAY)" -%}
+        {%- set INCREMENTAL_DAYS =  var('OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS', 5 ) +extend  -%}
+		{%- set tsStart = "TIMESTAMP_SUB(TIMESTAMP(CURRENT_DATE()), INTERVAL " ~  INCREMENTAL_DAYS  ~ " DAY)" -%}
 		{%- set tsEnd = "TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY))" -%}
 		{{ return((tsStart, tsEnd)) }}
 	{%- else -%}
