@@ -3,7 +3,7 @@
 {%- endmacro %}
 
 {% macro bigquery__get_version(version, type) -%}
-    {%- set cleaned_version = "REGEXP_EXTRACT(" ~ version ~ ", r'^\\d+(\\.\\d+){0,2}')" -%}
+    {%- set cleaned_version = "REGEXP_EXTRACT(" ~ version ~ ", r'^(\\d+(?:\\.\\d+){0,2})')" -%}
     {%- if type == 'major' -%}
         SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(0)] AS INT64)
     {%- elif type == 'minor' -%}
