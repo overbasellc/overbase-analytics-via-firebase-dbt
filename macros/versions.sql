@@ -3,30 +3,31 @@
 {%- endmacro %}
 
 {% macro bigquery__get_version(version, type) -%}
+    {%- set cleaned_version = REGEXP_EXTRACT({{ version }}, r'^\d+(\.\d+){0,2}') -%}
     {%- if type == 'major' -%}
-        SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(0)] AS INT64)
+        SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(0)] AS INT64)
     {%- elif type == 'minor' -%}
-        SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(1)] AS INT64)
+        SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(1)] AS INT64)
     {%- elif type == 'bugfix' -%}
-        SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(2)] AS INT64)
+        SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(2)] AS INT64)
     {%- elif type == 'major.minor' -%}
-        SAFE_CAST(CONCAT( {{ overbase_firebase.get_version(version, 'major') }} , ".",  COALESCE({{ overbase_firebase.get_version(version, 'minor') }}, 0) ) AS FLOAT64)
+        SAFE_CAST(CONCAT( {{ overbase_firebase.get_version(cleaned_version, 'major') }} , ".",  COALESCE({{ overbase_firebase.get_version(cleaned_version, 'minor') }}, 0) ) AS FLOAT64)
     {%- elif type == 'major.minor.bugfix' -%}
         {#  17 -> 17; 17.0 -> 17.0; 17.0.1 -> 17.0.1  #}
-        CASE WHEN REGEXP_CONTAINS({{ version }}, r'^[0-9.]*$') AND ARRAY_LENGTH(SPLIT({{ version }}, '.')) <= 3 THEN
+        CASE WHEN REGEXP_CONTAINS({{ cleaned_version }}, r'^[0-9.]*$') AND ARRAY_LENGTH(SPLIT({{ cleaned_version }}, '.')) <= 3 THEN
                 SAFE_CAST (
-                    CONCAT(         SPLIT({{ version }}, '.')[SAFE_OFFSET(0)]
-                         , COALESCE(CONCAT('.', SPLIT({{ version }}, '.')[SAFE_OFFSET(1)]),'')
-                         , COALESCE(CONCAT('.', SPLIT({{ version }}, '.')[SAFE_OFFSET(2)]),'')
+                    CONCAT(         SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(0)]
+                         , COALESCE(CONCAT('.', SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(1)]),'')
+                         , COALESCE(CONCAT('.', SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(2)]),'')
                     ) AS STRING)
             ELSE NULL
         END
     {%- elif type == 'normalized' -%}
-        CASE WHEN REGEXP_CONTAINS({{ version }}, r'^[0-9.]*$') AND ARRAY_LENGTH(SPLIT({{ version }}, '.')) <= 3 THEN
+        CASE WHEN REGEXP_CONTAINS({{ cleaned_version }}, r'^[0-9.]*$') AND ARRAY_LENGTH(SPLIT({{ cleaned_version }}, '.')) <= 3 THEN
                 SAFE_CAST (
-                    CONCAT(COALESCE(FORMAT('%06d', SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(0)] AS INT64)),'000000')
-                         , COALESCE(FORMAT('%06d', SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(1)] AS INT64)),'000000')
-                         , COALESCE(FORMAT('%06d', SAFE_CAST(SPLIT({{ version }}, '.')[SAFE_OFFSET(2)] AS INT64)),'000000')
+                    CONCAT(COALESCE(FORMAT('%06d', SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(0)] AS INT64)),'000000')
+                         , COALESCE(FORMAT('%06d', SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(1)] AS INT64)),'000000')
+                         , COALESCE(FORMAT('%06d', SAFE_CAST(SPLIT({{ cleaned_version }}, '.')[SAFE_OFFSET(2)] AS INT64)),'000000')
                     ) AS INT64)
             ELSE NULL
         END
