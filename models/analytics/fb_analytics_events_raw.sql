@@ -21,7 +21,7 @@ SELECT    TIMESTAMP_MICROS(event_timestamp) as event_ts
         , app_info.id as app_id
         , ARRAY_TO_STRING(ARRAY_REVERSE(SPLIT(app_info.id, '.')), '.') as reverse_app_id
         , event_name
-        , platform
+        , {{ var( 'OVERBASE:CUSTOM_PLATFORM_PREPROCESSOR', 'platform') }} as platform
         , app_info.install_source as appstore
         , STRUCT<firebase_value STRING, major INT64, minor INT64, bugfix INT64, major_minor FLOAT64, major_minor_bugfix STRING, normalized INT64, join_value STRING>(
             {%- set v = "app_info.version" -%}
