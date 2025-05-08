@@ -43,7 +43,7 @@ vars:
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_TABLE_NAME": "events_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_EVENTS_INTRADAY_TABLE_NAME": "events_intraday_*" # optional, but used in sources.yml
     # "OVERBASE:FIREBASE_ANALYTICS_CUSTOM_INSTALL_EVENT": "" # optional e.g. attributed_first_open
-    # "OVERBASE:CUSTOM_PLATFORM_PREPROCESSOR": "IF(app_version LIKE '%nexus', 'nexus', platform)"
+    # "OVERBASE:CUSTOM_PLATFORM_PREPROCESSOR": "IF(app_info.version LIKE '%nexus', 'nexus', platform)"
     # "OVERBASE:FIREBASE_ANALYTICS_DEFAULT_INCREMENTAL_DAYS":  # optional
     # "OVERBASE:FIREBASE_CRASHLYTICS_DEFAULT_INCREMENTAL_DAYS":  # optional
     # "OVERBASE:FIREBASE_ANALYTICS_FULL_REFRESH_START_DATE": "2018-01-01" # mandatory
