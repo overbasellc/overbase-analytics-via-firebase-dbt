@@ -77,5 +77,6 @@ WITH  custom_install_event AS (
 SELECT *
 FROM data 
 WHERE {{ overbase_firebase.analyticsDateFilterFor('event_date') }}
+QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_ts) = 1
 
 
